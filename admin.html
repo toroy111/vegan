@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>珍愛家早午餐 - 後台管理面板</title>
+    <style>
+        :root { --primary-color: #2c3e50; --secondary-color: #2ecc71; --bg-color: #ecf0f1; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
+        body { background-color: var(--bg-color); padding: 20px; }
+        .dashboard { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .refresh-btn { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .clear-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 10px; }
+        .order-table { width: 100%; border-collapse: collapse; }
+        .order-table th, .order-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: top; }
+        .order-table th { background-color: var(--primary-color); color: white; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-pending { background: #f1c40f; color: #fff; }
+        .status-completed { background: #2ecc71; color: #fff; }
+        .action-btn { background: var(--primary-color); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .note-box { margin-top: 5px; padding: 4px 8px; background: #fff2cc; border-left: 3px solid #f1c40f; font-size: 13px; color: #7f8c8d; }
+        .contact-info { font-size: 12px; color: #2980b9; margin-top: 4px; background: #e8f4f8; padding: 4px; border-radius: 4px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div class="header-bar">
+            <h2>📥 珍愛家素食早午餐 - 即時訂單管理</h2>
+            <div>
+                <button class="refresh-btn" onclick="loadOrders()">🔄 重新整理訂單</button>
+                <button class="clear-btn" onclick="clearAllOrders()">⚠️ 清空歷史紀錄</button>
+            </div>
+        </div>
+        
+        <table class="order-table">
+            <thead>
+                <tr>
+                    <th>訂單編號</th>
+                    <th>取餐日期 / 時間</th>
+                    <th>顧客資訊 (桌號/聯絡方式)</th>
+                    <th>點餐明細與備註</th>
+                    <th>總金額</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="admin-orders-tbody">
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #999;">目前沒有新訂單</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function loadOrders() {
+            const tbody = document.getElementById('admin-orders-tbody');
+            let orders = JSON.parse(localStorage.getItem('jlh_orders')) || [];
+
+            if(orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #999;">目前沒有任何訂單</td></tr>`;
+                return;
+            }
+
+            orders.reverse();
+
+            let tbodyHtml = '';
+            orders.forEach(o => {
+                let itemsDesc = o.items.map(i => `${i.fullName} x ${i.qty}`).join('<br>');
+                let badgeClass = o.status === '新訂單' ? 'status-pending' : 'status-completed';
+                let actionBtn = o.status === '新訂單' ? `<button class="action-btn" onclick="completeOrder(${o.id})">出餐完成</button>` : '已結案';
+                
+                let noteHtml = o.note && o.note !== '無' ? `<div class="note-box">📝 備註：${o.note}</div>` : '';
+                let displayDate = o.date ? o.date : '未指定日期';
+
+                // 處理新增的電話與 LINE 顯示格式
+                let customerPhone = o.phone ? o.phone : '未填寫';
+                let customerLine = o.line ? o.line : '未填寫';
+
+                tbodyHtml += `<tr>
+                    <td>#${o.id}</td>
+                    <td><strong>${displayDate}</strong><br><span style="color:#7f8c8d; font-size:12px;">${o.time}</span></td>
+                    <td>
+                        <strong>${o.type}</strong><br>
+                        <div class="contact-info">
+                            📞 電話: ${customerPhone}<br>
+                            💬 LINE: ${customerLine}
+                        </div>
+                    </td>
+                    <td style="font-size:14px;">
+                        <div>${itemsDesc}</div>
+                        ${noteHtml}
+                    </td>
+                    <td style="color:red; font-weight:bold;">$${o.total}</td>
+                    <td><span class="status-badge ${badgeClass}">${o.status}</span></td>
+                    <td>${actionBtn}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = tbodyHtml;
+        }
+
+        function completeOrder(orderId) {
+            let orders = JSON.parse(localStorage.getItem('jlh_orders')) || [];
+            let target = orders.find(o => o.id === orderId);
+            if(target) {
+                target.status = '已完成';
+                localStorage.setItem('jlh_orders', JSON.stringify(orders));
+                loadOrders();
+            }
+        }
+
+        function clearAllOrders() {
+            if(confirm('確定要清空所有訂單紀錄嗎？')) {
+                localStorage.removeItem('jlh_orders');
+                localStorage.removeItem('jlh_order_id_counter');
+                loadOrders();
+            }
+        }
+
+        window.onload = function() {
+            loadOrders();
+            setInterval(loadOrders, 5000); 
+        };
+    </script>
+</body>
+</html>
