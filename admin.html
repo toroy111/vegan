@@ -13,12 +13,13 @@
         .refresh-btn { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .clear-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 10px; }
         .order-table { width: 100%; border-collapse: collapse; }
-        .order-table th, .order-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .order-table th, .order-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: top; }
         .order-table th { background-color: var(--primary-color); color: white; }
         .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .status-pending { background: #f1c40f; color: #fff; }
         .status-completed { background: #2ecc71; color: #fff; }
         .action-btn { background: var(--primary-color); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .note-box { margin-top: 5px; padding: 4px 8px; background: #fff2cc; border-left: 3px solid #f1c40f; font-size: 13px; color: #7f8c8d; }
     </style>
 </head>
 <body>
@@ -36,9 +37,9 @@
             <thead>
                 <tr>
                     <th>訂單編號</th>
-                    <th>時間</th>
+                    <th>取餐日期 / 時間</th>
                     <th>類型/桌號</th>
-                    <th>點餐明細</th>
+                    <th>點餐明細與備註</th>
                     <th>總金額</th>
                     <th>狀態</th>
                     <th>操作</th>
@@ -62,7 +63,7 @@
                 return;
             }
 
-            // 讓新訂單排在最上面
+            // 讓最新的訂單排在上面
             orders.reverse();
 
             let tbodyHtml = '';
@@ -70,12 +71,20 @@
                 let itemsDesc = o.items.map(i => `${i.fullName} x ${i.qty}`).join('<br>');
                 let badgeClass = o.status === '新訂單' ? 'status-pending' : 'status-completed';
                 let actionBtn = o.status === '新訂單' ? `<button class="action-btn" onclick="completeOrder(${o.id})">出餐完成</button>` : '已結案';
+                
+                // 處理備註顯示樣式
+                let noteHtml = o.note && o.note !== '無' ? `<div class="note-box">📝 備註：${o.note}</div>` : '';
+                // 處理日期顯示（若舊訂單沒日期則給預設值）
+                let displayDate = o.date ? o.date : '未指定日期';
 
                 tbodyHtml += `<tr>
                     <td>#${o.id}</td>
-                    <td>${o.time}</td>
+                    <td><strong>${displayDate}</strong><br><span style="color:#7f8c8d; font-size:12px;">${o.time}</span></td>
                     <td><strong>${o.type}</strong></td>
-                    <td style="font-size:14px;">${itemsDesc}</td>
+                    <td style="font-size:14px;">
+                        <div>${itemsDesc}</div>
+                        ${noteHtml}
+                    </td>
                     <td style="color:red; font-weight:bold;">$${o.total}</td>
                     <td><span class="status-badge ${badgeClass}">${o.status}</span></td>
                     <td>${actionBtn}</td>
@@ -84,18 +93,16 @@
             tbody.innerHTML = tbodyHtml;
         }
 
-        // 修改訂單狀態為已完成
         function completeOrder(orderId) {
             let orders = JSON.parse(localStorage.getItem('jlh_orders')) || [];
             let target = orders.find(o => o.id === orderId);
             if(target) {
                 target.status = '已完成';
                 localStorage.setItem('jlh_orders', JSON.stringify(orders));
-                loadOrders(); // 重新渲染
+                loadOrders();
             }
         }
 
-        // 清空歷史測試資料
         function clearAllOrders() {
             if(confirm('確定要清空所有訂單紀錄嗎？')) {
                 localStorage.removeItem('jlh_orders');
@@ -104,7 +111,6 @@
             }
         }
 
-        // 進入網頁自動讀取，並每隔 5 秒自動重新整理一次
         window.onload = function() {
             loadOrders();
             setInterval(loadOrders, 5000); 
