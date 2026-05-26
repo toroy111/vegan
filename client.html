@@ -34,6 +34,10 @@
         .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; }
         .cart-total { font-size: 18px; font-weight: bold; text-align: right; margin: 20px 0; color: #c0392b; }
         .submit-order-btn { width: 100%; background: var(--secondary-color); color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        
+        /* 表單輸入框優化 */
+        .input-field { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .flex-inputs { display: flex; gap: 5px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -52,13 +56,20 @@
             
             <div class="cart-section">
                 <h3>🛒 我的購物車</h3>
-                <div style="margin: 10px 0;">
-                    <label>用餐方式：</label>
-                    <select id="dining-type" style="padding: 5px;">
-                        <option value="內用">內用</option>
-                        <option value="外帶">外帶</option>
-                    </select>
-                    <input type="text" id="table-num" placeholder="桌號 / 姓名" style="padding: 5px; width: 100px; margin-left: 5px;">
+                <div style="margin: 15px 0 10px 0;">
+                    <label style="font-size: 14px; font-weight: bold;">📅 取餐日期：</label>
+                    <input type="date" id="order-date" class="input-field">
+                    
+                    <div class="flex-inputs">
+                        <select id="dining-type" class="input-field" style="width: 40%;">
+                            <option value="內用">內用</option>
+                            <option value="外帶">外帶</option>
+                        </select>
+                        <input type="text" id="table-num" placeholder="桌號 / 姓名" class="input-field" style="width: 60%;">
+                    </div>
+                    
+                    <label style="font-size: 14px; font-weight: bold;">✍️ 訂單備註（客製化要求）：</label>
+                    <textarea id="order-note" class="input-field" placeholder="例如：拿鐵去冰 / 蛋餅要酥一點 / 不要加醬" style="height: 60px; resize: none;"></textarea>
                 </div>
                 <hr>
                 <div id="cart-items-list" style="margin-top: 15px;">
@@ -71,6 +82,7 @@
     </div>
 
     <script>
+        // 菜單資料庫
         const menuData = {
             "蛋餅類": [
                 { id: "e1", name: "原味蛋餅", price: 25 },
@@ -189,22 +201,25 @@
 
         function removeFromCart(index) { cart.splice(index, 1); renderCart(); }
 
-        // 送出訂單至本地資料庫 localStorage
+        // 送出訂單
         function submitOrder() {
             if(cart.length === 0) { alert('您的購物車是空的！'); return; }
+            const oDate = document.getElementById('order-date').value;
             const dtype = document.getElementById('dining-type').value;
             const tnum = document.getElementById('table-num').value || '未填寫';
+            const note = document.getElementById('order-note').value || '無';
             const total = parseInt(document.getElementById('cart-total-price').innerText);
             
-            // 讀取舊訂單
             let localOrders = JSON.parse(localStorage.getItem('jlh_orders')) || [];
             let currentId = parseInt(localStorage.getItem('jlh_order_id_counter')) || 1001;
 
             const newOrder = {
                 id: currentId,
+                date: oDate,  // 新增：取餐日期
                 time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
                 type: `${dtype} - ${tnum}`,
                 items: [...cart],
+                note: note,   // 新增：客製化備註
                 total: total,
                 status: '新訂單'
             };
@@ -213,12 +228,18 @@
             localStorage.setItem('jlh_orders', JSON.stringify(localOrders));
             localStorage.setItem('jlh_order_id_counter', currentId + 1);
             
-            alert(`訂單 #${currentId} 已成功送出！老闆在後台可以收到囉！`);
+            alert(`訂單 #${currentId} 已成功送出！`);
             cart = [];
+            document.getElementById('order-note').value = ''; // 清空備註欄
             renderCart();
         }
 
-        window.onload = function() { renderMenu(); };
+        // 初始化日期選擇器為今天
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('order-date').value = today;
+            renderMenu();
+        };
     </script>
 </body>
 </html>
