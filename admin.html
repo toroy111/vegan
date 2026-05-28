@@ -3,88 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>珍愛家早午餐 - 後台訂單管理系統</title>
+    <title>珍愛家素食早午餐 - 訂單管理後台</title>
     <style>
-        body { font-family: "PingFang TC", sans-serif; background-color: #f1f2f6; margin: 0; padding: 20px; }
-        .admin-container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf2f7; padding-bottom: 15px; margin-bottom: 20px; }
-        h1 { color: #2c3e50; margin: 0; font-size: 24px; }
-        .refresh-btn { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
-        .refresh-btn:hover { background: #2980b9; }
+        :root {
+            --primary-color: #27ae60;
+            --secondary-color: #e67e22;
+            --bg-color: #f4f6f9;
+            --dark-color: #2c3e50;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
+        body { background-color: var(--bg-color); color: var(--dark-color); padding: 20px; }
         
-        .order-card { background: #f8f9fa; border: 1px solid #e1e8ed; border-radius: 8px; padding: 15px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px; align-items: start; }
-        @media (max-width: 768px) { .order-card { grid-template-columns: 1fr; } }
+        header { background-color: var(--primary-color); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        header h1 { font-size: 24px; }
         
-        .info-sec p { margin: 4px 0; font-size: 14px; color: #4a5568; }
-        .info-sec strong { color: #2d3748; }
-        .items-sec { background: white; padding: 10px; border-radius: 6px; border: 1px solid #edf2f7; white-space: pre-line; font-size: 14px; line-height: 1.4; color: #2c3e50; }
-        .status-sec { text-align: right; }
-        .price-tag { color: #e74c3c; font-weight: bold; font-size: 20px; display: block; margin-bottom: 10px; }
-        .status-badge { display: inline-block; padding: 6px 12px; background: #e67e22; color: white; border-radius: 4px; font-weight: bold; font-size: 12px; }
-        #loading { text-align: center; color: #718096; padding: 4px; font-weight: bold; }
+        .refresh-btn { background: white; color: var(--primary-color); border: 2px solid white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .refresh-btn:hover { background: rgba(255,255,255,0.9); transform: scale(1.02); }
+        
+        .status-bar { background: #fff; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #7f8c8d; border-left: 5px solid var(--secondary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        
+        /* 訂單卡片排版 */
+        .orders-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+        .order-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border-top: 6px solid var(--secondary-color); position: relative; display: flex; flex-direction: column; justify-content: space-between; transition: 0.3s; }
+        .order-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        
+        .order-header { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px dashed #edf2f7; padding-bottom: 10px; }
+        .order-time { font-size: 12px; color: #95a5a6; }
+        .order-id { font-weight: bold; color: var(--dark-color); }
+        
+        .info-row { font-size: 14px; margin-bottom: 6px; display: flex; }
+        .info-label { color: #7f8c8d; min-width: 85px; font-weight: 500; }
+        .info-value { color: #34495e; font-weight: bold; }
+        
+        .type-badge { background: #ffeaa7; color: #d63031; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .type-badge.inside { background: #dff9fb; color: #0984e3; }
+        
+        /* 餐點明細區 */
+        .items-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 14px; max-height: 180px; overflow-y: auto; border: 1px solid #edf2f7; }
+        .item-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f1f2f6; }
+        .item-row:last-child { border-bottom: none; }
+        
+        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf2f7; }
+        .total-price { color: #e74c3c; font-size: 20px; font-weight: bold; }
+        
+        .loading { text-align: center; padding: 50px; font-size: 18px; color: #7f8c8d; width: 100%; grid-column: 1 / -1; }
+        .no-data { text-align: center; padding: 50px; font-size: 18px; color: #95a5a6; width: 100%; grid-column: 1 / -1; }
     </style>
 </head>
 <body>
 
-    <div class="admin-container">
-        <div class="header">
-            <h1>🍳 珍愛家早午餐 — 即時訂單管理後台</h1>
-            <button class="refresh-btn" onclick="fetchOrders()">🔄 重新整理訂單</button>
-        </div>
-        
-        <div id="loading">正在連線至 Google 試算表載入訂單...</div>
-        <div id="orders-list"></div>
+    <header>
+        <h1>🍳 珍愛家素食早午餐 - 訂單管理後台</h1>
+        <button class="refresh-btn" onclick="fetchOrders()">🔄 手動整理訂單</button>
+    </header>
+
+    <div class="status-bar" id="status-text">
+        系統狀態：正在準備載入訂單資料...
+    </div>
+
+    <div class="orders-container" id="orders-list">
+        <div class="loading">正在努力加載最新訂單，請稍候...</div>
     </div>
 
     <script>
-        // ⚠️ 請在這裡換成與前台相同的 Google Apps Script 部署網址 ⚠️
-        const API_URL = "您的_GOOGLE_GAS_部署網址";
+        // ⚠️【請將這裡換成你從 Google 部署得到的同一個 Web App 網址】⚠️
+        const API_URL = "你的Google網址";
 
+        // 載入訂單資料
         function fetchOrders() {
-            const listDiv = document.getElementById('orders-list');
-            const loadingDiv = document.getElementById('loading');
-            loadingDiv.style.display = 'block';
+            if(API_URL === "你的Google網址") {
+                document.getElementById('orders-list').innerHTML = `<div class="no-data">⚠️ 請先在 admin.html 程式碼中設定您的 API_URL 網址！</div>`;
+                return;
+            }
+
+            document.getElementById('status-text').innerText = "系統狀態：正在獲取最新訂單...";
             
-            // 透過 GAS doGet 撈取最新資料
-            fetch(API_URL)
-            .then(res => res.json())
-            .then(data => {
-                loadingDiv.style.display = 'none';
-                if(data.length === 0) {
-                    listDiv.innerHTML = '<p style="text-align:center; color:#a0aec0; padding:4px;">目前尚無任何訂單紀錄喔！</p>';
-                    return;
-                }
-                
-                let html = '';
-                // 將新訂單排序在最上方
-                data.reverse().forEach(order => {
-                    html += `
-                    <div class="order-card">
-                        <div class="info-sec">
-                            <p><strong>單號：</strong>${order.id}</p>
-                            <p><strong>日期：</strong>${order.date}</p>
-                            <p><strong>時間：</strong>${order.time}</p>
-                            <p><strong>方式：</strong>${order.type} (填寫: ${order.tableNum})</p>
-                            <p><strong>電話：</strong>${order.phone}</p>
-                            <p><strong>LINE：</strong>${order.line}</p>
-                        </div>
-                        <div class="items-sec"><strong>🛒 明細：</strong>\n${order.itemsSummary}\n\n<span style="color:#718096;">📝 備註：${order.note}</span></div>
-                        <div class="status-sec">
-                            <span class="price-tag">$${order.total}</span>
-                            <span class="status-badge">${order.status}</span>
-                        </div>
-                    </div>`;
+            // 透過 GET 請求去撈取試算表中的最新訂單
+            fetch(`${API_URL}?action=getOrders`)
+                .then(response => response.json())
+                .then(data => {
+                    renderOrders(data);
+                    const now = new Date();
+                    document.getElementById('status-text').innerText = `系統狀態：更新成功！最後更新時間：${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}（每 30 秒自動整理）`;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('status-text').innerText = "系統狀態：連線失敗，請檢查 API 網址或試算表權限。";
+                    document.getElementById('orders-list').innerHTML = `<div class="no-data">❌ 無法載入資料，請確認後台 App Script 是否正確執行。</div>`;
                 });
-                listDiv.innerHTML = html;
-            })
-            .catch(err => {
-                loadingDiv.innerText = '❌ 無法讀取資料，請確認試算表共用權限已開，或 GAS 網址是否正確。';
-                console.error(err);
+        }
+
+        // 渲染訂單到畫面上
+        function renderOrders(orders) {
+            const container = document.getElementById('orders-list');
+            container.innerHTML = '';
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<div class="no-data">📭 目前暫無任何新訂單。</div>';
+                return;
+            }
+
+            // 將訂單依照時間排序（最新的在最上面）
+            orders.reverse();
+
+            orders.forEach((order, index) => {
+                // 解析餐點內容（如果是字串就試著解析，如果已經是物件就直接用）
+                let itemsArray = [];
+                try {
+                    itemsArray = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+                } catch(e) {
+                    itemsArray = [];
+                }
+
+                // 產生餐點 HTML 明細
+                let itemsHtml = '';
+                if(Array.isArray(itemsArray)) {
+                    itemsArray.forEach(item => {
+                        itemsHtml += `
+                            <div class="item-row">
+                                <span>📌 ${item.fullName || item.name}</span>
+                                <span style="font-weight:bold; color:var(--secondary-color);">x ${item.qty}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    // 備用防錯：如果不是標準陣列，直接顯示原本的文字
+                    itemsHtml = `<div class="item-row"><span>${order.items || '無明細'}</span></div>`;
+                }
+
+                // 判斷內用或外帶的標籤樣式
+                const typeClass = order.type === '內用' ? 'inside' : '';
+
+                const card = document.createElement('div');
+                card.className = 'order-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="order-header">
+                            <span class="order-id">#訂單 ${orders.length - index}</span>
+                            <span class="order-time">${order.timestamp || '剛剛'}</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">📅 取餐日期</span>
+                            <span class="info-value">${order.date || '未填'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">🍽️ 填寫方式</span>
+                            <span class="info-value"><span class="type-badge ${typeClass}">${order.type || '外帶'}</span></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">👤 桌號/姓名</span>
+                            <span class="info-value" style="color:#2980b9;">${order.tableNum || '未填'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">📞 聯絡電話</span>
+                            <span class="info-value">${order.phone || '未填'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">💬 LINE ID</span>
+                            <span class="info-value" style="font-weight:normal; color:#7f8c8d;">${order.line || '無'}</span>
+                        </div>
+                        
+                        <div class="items-box">
+                            <div style="font-weight:bold; margin-bottom:6px; font-size:12px; color:#95a5a6;">🛒 點餐明細：</div>
+                            ${itemsHtml}
+                        </div>
+                        
+                        <div class="info-row" style="margin-top:10px;">
+                            <span class="info-label">✍️ 訂單備註</span>
+                            <span class="info-value" style="font-weight:normal; color:#e67e22; font-size:13px;">${order.note || '無'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="order-footer">
+                        <span style="font-size:14px; font-weight:bold; color:#7f8c8d;">總計金額</span>
+                        <span class="total-price">$${order.total || 0}</span>
+                    </div>
+                `;
+                container.appendChild(card);
             });
         }
 
-        // 網頁開啟時自動載入
-        window.onload = fetchOrders;
+        // 網頁開啟時自動執行，且設定每 30 秒自動刷新
+        window.onload = function() {
+            fetchOrders();
+            setInterval(fetchOrders, 30000); 
+        };
     </script>
 </body>
 </html>
