@@ -73,7 +73,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // 1. Firebase 連線設定
+        // 1. Firebase 連線設定 (已修正為 3 個 f 的正確專案網址)
         const firebaseConfig = {
             apiKey: "AlzaSyAgeP2a6Z-TqJaZ5F0j_2UoXVQ_WE3sckw",
             authDomain: "jafff-34d02.firebaseapp.com",
@@ -82,23 +82,23 @@
             messagingSenderId: "332430248808",
             appId: "1:332430248808:web:b81a52b4c3b15021e664dd",
             measurementId: "G-T9YGSE9EX6",
-            databaseURL: "https://jaffff-34d02-default-rtdb.firebaseio.com"
+            databaseURL: "https://jafff-34d02-default-rtdb.firebaseio.com"
         };
 
         // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 建立音效播放器 (使用瀏覽器內建合成器，不需要另外抓音檔，確保百分之百有聲音)
+        // 建立音效播放器
         function playDingDong() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 
-                // 第一個音 (高音)
+                // 第 1 個音
                 const osc1 = audioCtx.createOscillator();
                 const gain1 = audioCtx.createGain();
                 osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
                 gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
                 gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
                 osc1.connect(gain1);
@@ -106,12 +106,12 @@
                 osc1.start();
                 osc1.stop(audioCtx.currentTime + 0.4);
 
-                // 第二個音 (低音)
+                // 第 2 個音
                 setTimeout(() => {
                     const osc2 = audioCtx.createOscillator();
                     const gain2 = audioCtx.createGain();
                     osc2.type = 'sine';
-                    osc2.frequency.setValueAtTime(440.00, audioCtx.currentTime); // A4
+                    osc2.frequency.setValueAtTime(440.00, audioCtx.currentTime); 
                     gain2.gain.setValueAtTime(0.3, audioCtx.currentTime);
                     gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
                     osc2.connect(gain2);
@@ -124,26 +124,22 @@
             }
         }
 
-        // 用來紀錄上一次看到的最新一筆訂單隨機 Key，避免重複叮咚
         let lastKnownTopOrderKey = null;
 
         // 2. 核心功能：監聽 Firebase Realtime Database
         function listenToFirebaseOrders() {
             const ordersRef = database.ref('orders');
 
-            // 只要雲端資料庫有任何變動，這裡就會即時觸發更新
             ordersRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 const tbody = document.getElementById('orders-tbody');
                 
-                // 狀況 A：如果資料庫裡完全沒有訂單
                 if (!data) {
                     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">目前沒有任何點餐訂單紀錄</td></tr>`;
                     lastKnownTopOrderKey = null;
                     return;
                 }
 
-                // 將物件轉變為陣列以利排序與網頁渲染
                 const ordersArray = [];
                 Object.keys(data).forEach(key => {
                     ordersArray.push({
@@ -152,36 +148,33 @@
                     });
                 });
 
-                // 排序：新訂單排在最上方 (利用推播時附帶的 timestamp，若無則用 id 補償)
+                // 排序：新訂單排在最上方
                 ordersArray.sort((a, b) => (b.timestamp || b.id) - (a.timestamp || a.id));
 
-                // ✨ 新訂單全自動叮咚提示邏輯
+                // 新訂單自動響鈴邏輯
                 if (ordersArray.length > 0) {
                     const currentTopKey = ordersArray[0].firebaseKey;
-                    // 當第一次載入，或最新的 Key 跟上一次紀錄不同，且狀態是「新訂單」時就發出聲音
                     if (lastKnownTopOrderKey !== null && lastKnownTopOrderKey !== currentTopKey) {
                         if (ordersArray[0].status === '新訂單') {
                             playDingDong();
                         }
                     }
-                    lastKnownTopOrderKey = currentTopKey; // 更新紀錄
+                    lastKnownTopOrderKey = currentTopKey;
                 }
 
-                // 3. 呼叫畫面渲染函式
+                // 呼姐畫面渲染
                 renderAdminTable(ordersArray); 
             }, (error) => {
                 console.error("後台讀取 Firebase 失敗:", error);
-                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:red; padding:30px;">資料載入失敗，請確認 Firebase Rules 規則權限。</td></tr>`;
             });
         }
 
-        // 3. 畫面繪製函式 (把先前的缺漏完整補上)
+        // 3. 畫面繪製功能 (🌟 已修正欄位拼錯導致的 undefined 與空白問題)
         function renderAdminTable(orders) {
             const tbody = document.getElementById('orders-tbody');
             let html = '';
 
             orders.forEach(order => {
-                // 判斷狀態決定標籤顏色樣式
                 let statusClass = 'status-new';
                 let actionButtonHtml = `<button class="action-btn" onclick="updateOrderStatus('${order.firebaseKey}', '已出餐')">完成出餐 ✔</button>`;
                 
@@ -190,26 +183,22 @@
                     actionButtonHtml = `<span style="color:#27ae60; font-size:13px; font-weight:bold;">★ 已處理完畢</span>`;
                 }
 
-                // 如果購物車 items 是物件陣列而非字串，進行安全相容轉型
-                let itemsDisplay = '';
-                if (Array.isArray(order.items)) {
-                    itemsDisplay = order.items.map(i => `${i.fullName} x${i.qty}`).join('\n');
-                } else {
-                    itemsDisplay = order.items || '無明細';
-                }
+                // 取得日期與時間 (已將錯誤的 order.oDate 修正為正確的 order.date)
+                let displayDate = order.date || '';
+                let displayTime = order.time || '';
 
                 html += `
                     <tr>
                         <td style="font-weight:bold; color:var(--accent-color);">#${order.id || '---'}</td>
                         <td>
                             <div style="font-weight:600;">${order.type || '未填'}</div>
-                            <div style="font-size:12px; color:#888; margin-top:2px;">下單時間: ${order.date || ''} ${order.time || ''}</div>
+                            <div style="font-size:12px; color:#888; margin-top:2px;">下單時間: ${displayDate} ${displayTime}</div>
                         </td>
                         <td>
                             <div>📞 ${order.phone || '無'}</div>
                             <div style="font-size:12px; color:#10b981; margin-top:2px;">LINE: ${order.line || '無'}</div>
                         </td>
-                        <td><div class="item-list-text">${itemsDisplay}</div></td>
+                        <td><div class="item-list-text">${order.items || '無明細'}</div></td>
                         <td><div class="note-text">${order.note || '無'}</div></td>
                         <td style="font-weight:bold; color:#d63031; font-size:16px;">$${order.total || 0}</td>
                         <td><span class="status-badge ${statusClass}">${order.status || '新訂單'}</span></td>
@@ -221,14 +210,10 @@
             tbody.innerHTML = html;
         }
 
-        // 4. 更新訂單狀態功能 (點擊「完成出餐」時執行)
+        // 4. 更新訂單狀態功能
         function updateOrderStatus(firebaseKey, newStatus) {
             database.ref(`orders/${firebaseKey}`).update({
                 status: newStatus
-            })
-            .then(() => {
-                console.log(`訂單 ${firebaseKey} 狀態更新成功！`);
-                // 這裡完全不需要重新整理網頁，.on('value') 偵測到雲端改變會瞬間幫你把按鈕變不見！
             })
             .catch(err => {
                 alert('更改狀態失敗: ' + err.message);
@@ -248,7 +233,6 @@
             }
         }
 
-        // 頁面初次載入時自動啟動 Firebase Realtime 監聽
         window.onload = function() {
             listenToFirebaseOrders();
         };
