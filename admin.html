@@ -275,13 +275,105 @@
         }
 
         // 4. 更新訂單狀態功能
-        function updateOrderStatus(firebaseKey, newStatus) {
-            database.ref(`orders/${firebaseKey}`).update({
-                status: newStatus
-            })
-            .catch(err => {
-                alert('更改狀態失敗: ' + err.message);
+       // 3. 畫面繪製功能（全新升級：品項內建清晰大排版表格 + 分類彩色標籤）
+        function renderAdminTable(orders) {
+            const tbody = document.getElementById('orders-tbody');
+            if(!tbody) return; // 安全防護
+            
+            let html = '';
+
+            orders.forEach(order => {
+                let statusClass = 'status-new';
+                let actionButtonHtml = `<button class="action-btn" onclick="updateOrderStatus('${order.firebaseKey}', '已出餐')">完成出餐 ✔</button>`;
+                
+                if (order.status === '已出餐' || order.status === '已完成') {
+                    statusClass = 'status-done';
+                    actionButtonHtml = `<span style="color:#27ae60; font-size:13px; font-weight:bold;">★ 已處理完畢</span>`;
+                }
+
+                let displayDate = order.date || '';
+                let displayTime = order.time || '';
+
+                // 🌟 【核心修改】將訂單品項字串解析，並封裝成精美、極簡、易讀的小表格
+                let itemsTableHtml = '';
+                if (order.items) {
+                    // 建立小表格的 HTML 結構，移除大框線，改用乾淨的下底線與舒適的間距
+                    itemsTableHtml = `
+                        <table style="width:100%; border-collapse:collapse; margin:0; background:transparent; font-size:14px;">
+                            <thead>
+                                <tr style="background:#f1f2f6; color:#555; font-size:12px;">
+                                    <th style="padding:6px 10px; border-bottom:2px solid #ced6e0; text-align:left;">餐點名稱</th>
+                                    <th style="padding:6px 10px; border-bottom:2px solid #ced6e0; text-align:center; width:50px;">數量</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    // 判斷 items 是陣列（新格式）還是換行字串（舊格式）
+                    if (Array.isArray(order.items)) {
+                        order.items.forEach(item => {
+                            // 🔍 自動分類邏輯：根據餐點名稱自動判斷種類並給予不同顏色的精美標籤
+                            let categoryBadge = '';
+                            const name = item.fullName || '';
+                            
+                            if (name.includes('漢堡') || name.includes('吐司') || name.includes('拼盤') || name.includes('飯') || name.includes('麵')) {
+                                categoryBadge = `<span style="background:#e8f4fd; color:#1e88e5; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">主餐</span>`;
+                            } else if (name.includes('蛋餅') || name.includes('抓餅')) {
+                                categoryBadge = `<span style="background:#fef5e7; color:#f39c12; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">蛋餅</span>`;
+                            } else if (name.includes('紅茶') || name.includes('奶茶') || name.includes('豆漿') || name.includes('咖啡') || name.includes('飲') || name.includes('汁')) {
+                                categoryBadge = `<span style="background:#eafaf1; color:#2ecc71; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">飲料</span>`;
+                            } else {
+                                categoryBadge = `<span style="background:#f4f6f7; color:#7f8c8d; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">點心</span>`;
+                            }
+
+                            itemsTableHtml += `
+                                <tr style="border-bottom:1px solid #eee;">
+                                    <td style="padding:8px 10px; text-align:left; font-weight:600; color:#2c3e50;">${categoryBadge}${name}</td>
+                                    <td style="padding:8px 10px; text-align:center; font-weight:bold; color:#e67e22; font-size:15px;">${item.qty || 1}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        // 舊資料相容處理：如果是以前測試的純文字字串，將它依換行拆開切片呈現
+                        const textLines = order.items.split('\n');
+                        textLines.forEach(line => {
+                            if(line.trim() === '') return;
+                            itemsTableHtml += `
+                                <tr style="border-bottom:1px solid #eee;">
+                                    <td style="padding:8px 10px; text-align:left; font-weight:600; color:#2c3e50;">${line}</td>
+                                    <td style="padding:8px 10px; text-align:center; font-weight:bold; color:#e67e22;">-</td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    itemsTableHtml += `</tbody></table>`;
+                } else {
+                    itemsTableHtml = '<span style="color:#aaa;">無明細</span>';
+                }
+
+                html += `
+                    <tr>
+                        <td style="font-weight:bold; color:var(--accent-color); font-size:16px;">#${order.id || '---'}</td>
+                        <td>
+                            <div style="font-weight:600; font-size:15px; color:#2c3e50;">${order.type || '未填'}</div>
+                            <div style="font-size:12px; color:#888; margin-top:4px;">下單: ${displayDate} ${displayTime}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight:600;">📞 ${order.phone || '無'}</div>
+                            <div style="font-size:12px; color:#10b981; margin-top:3px; font-weight:500;">LINE: ${order.line || '無'}</div>
+                        </td>
+                        <td style="padding:8px; background:#fafafa; width:320px; border-left:3px solid #ced6e0;">${itemsTableHtml}</td>
+                        <td><div class="note-text" style="font-weight:500;">${order.note || '無'}</div></td>
+                        <td style="font-weight:bold; color:#d63031; font-size:18px;">$${order.total || 0}</td>
+                        <td><span class="status-badge ${statusClass}">${order.status || '新訂單'}</span></td>
+                        <td>${actionButtonHtml}</td>
+                    </tr>
+                `;
             });
+
+            tbody.innerHTML = html;
+        }
         }
 
         // 5. 清空所有歷史訂單功能
