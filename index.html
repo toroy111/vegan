@@ -78,7 +78,7 @@ import {
 const firebaseConfig = {
   apiKey: "AIzaSyAgeP2a6Z-TqJaZ5F0j_2UoXVQ_WE3sckw",
   authDomain: "jaffff-34d02.firebaseapp.com",
-  databaseURL: "https://toroy111-3219c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  databaseURL: "這裡要放你的Realtime Database網址",
   projectId: "jaffff-34d02",
   storageBucket: "jaffff-34d02.firebasestorage.app",
   messagingSenderId: "332430248808",
@@ -535,5 +535,27 @@ set(newOrderRef, newOrder)
             initMenu();
         };
     </script>
+    <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAgeP2a6Z-TqJaZ5F0j_2UoXVQ_WE3sckw",
+  authDomain: "jaffff-34d02.firebaseapp.com",
+  databaseURL: "https://toroy111-3219c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "jaffff-34d02",
+  storageBucket: "jaffff-34d02.firebasestorage.app",
+  messagingSenderId: "332430248808",
+  appId: "1:332430248808:web:b81a52b4c3b15021e664dd",
+  measurementId: "G-T9YGSE9EX6"
+};
+
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+window.database = database;
+window.ref = ref;
+window.push = push;
+</script>
 </body>
 </html>
