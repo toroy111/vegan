@@ -26,12 +26,7 @@
         .action-btn { background-color: var(--success-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; }
         .action-btn:hover { background-color: #219653; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .clear-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        
-        /* 音效控制區塊樣式 */
-        .audio-ctrl-container { display: flex; align-items: center; background: #34495e; padding: 6px 12px; border-radius: 6px; border: 1px solid #455a64; margin-right: 10px; gap: 8px; }
-        .sound-select { background: #2c3e50; color: white; border: 1px solid #5d6d7e; padding: 4px 8px; border-radius: 4px; font-size: 13px; cursor: pointer; outline: none; }
-        .audio-btn { background: var(--accent-color); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .header-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .audio-btn { background-color: #34495e; color: #cbd5e0; border: 1px solid #455a64; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-right: 10px; }
         
         .item-list-text { font-size: 14px; line-height: 1.5; color: #2c3e50; white-space: pre-line; }
         .note-text { color: #7f8c8d; font-size: 13px; font-style: italic; max-width: 200px; word-break: break-all; }
@@ -44,20 +39,10 @@
     <header>
         <div>
             <h1 style="font-size: 22px;">🍳 珍愛家早午餐 - 即時接單後台 🔔</h1>
-            <p style="font-size: 12px; opacity: 0.8; margin-top: 3px;">系統已成功連線 Firebase：新訂單免重新整理即時跳出、可客製選取提醒鈴聲</p>
+            <p style="font-size: 12px; opacity: 0.8; margin-top: 3px;">系統已成功連線 Firebase：新訂單免重新整理即時跳出、全自動播放鈴聲</p>
         </div>
-        <div class="header-actions">
-            <!-- 🌟 新增的音效切換控制區 -->
-            <div class="audio-ctrl-container">
-                <span style="font-size: 13px; color: #cbd5e0;">🔔 提醒音效：</span>
-                <select id="sound-select-menu" class="sound-select" onchange="saveSoundPreference()">
-                    <option value="familymart">🏪 經典超商進門音 (推薦)</option>
-                    <option value="longalert">🚨 連續緊急警報音 (超響亮)</option>
-                    <option value="melodic">🎵 輕快出餐小短曲</option>
-                    <option value="classic">🔔 原版簡短叮咚音</option>
-                </select>
-                <button class="audio-btn" onclick="triggerSelectedSound()">🔊 測試</button>
-            </div>
+        <div>
+            <button class="audio-btn" onclick="playDingDong()">🔊 測試音效</button>
             <button class="clear-btn" onclick="clearAllOrders()">🧹 清空歷史訂單紀錄</button>
         </div>
     </header>
@@ -85,108 +70,59 @@
         </div>
     </div>
 
-    <!-- 載入 Firebase 核心與資料庫模組 -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // 1. Firebase 連線設定 (已修正為您的正確區域型網址)
+        // 1. Firebase 連線設定 (已修正為 3 個 f 的正確專案網址)
         const firebaseConfig = {
-            apiKey: "AlzaSyAgeP2a6Z-TqJaZ5F0j_2UoXVQ_WE3sckw",
-            authDomain: "toroy111-3219c.firebaseapp.com",
-            projectId: "toroy111-3219c",
-            storageBucket: "toroy111-3219c.firebasestorage.app",
-            messagingSenderId: "332430248808",
-            appId: "1:332430248808:web:b81a52b4c3b15021e664dd",
-            measurementId: "G-T9YGSE9EX6",
-            databaseURL: "https://toroy111-3219c-default-rtdb.asia-southeast1.firebasedatabase.app"
-        };
+  apiKey: "AIzaSyAgeP2a6Z-TqJaZ5F0j_2UoXVQ_WE3sckw",
+  authDomain: "jafff-34d02.firebaseapp.com",
+  databaseURL: "https://toroy111-3219c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "jafff-34d02",
+  storageBucket: "jafff-34d02.firebasestorage.app",
+  messagingSenderId: "332430248808",
+  appId: "1:332430248808:web:b81a52b4c3b15021e664dd",
+  measurementId: "G-T9YGSE9EX6"
+};
 
         // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 🌟 新增：多重長音效合成引擎
-        const SoundEngine = {
-            ctx: null,
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-            },
-            // 播放單個音符的輔助函式
-            playNote(freq, start, duration, type = 'sine', volume = 0.2) {
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime + start);
-                gain.gain.setValueAtTime(volume, this.ctx.currentTime + start);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + start + duration);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(this.ctx.currentTime + start);
-                osc.stop(this.ctx.currentTime + start + duration);
-            },
-            
-            // 1. 經典超商進門音 (長度約 1.5 秒，旋律極具辨識度)
-            familymart() {
-                this.init();
-                const t = 0.15; // 節拍時間基長
-                this.playNote(587.33, 0, t*2);       // D5
-                this.playNote(440.00, t*2, t*2);     // A4
-                this.playNote(392.00, t*4, t*2);     // G4
-                this.playNote(440.00, t*6, t*2);     // A4
-                this.playNote(523.25, t*8, t*2);     // C5
-                this.playNote(587.33, t*10, t*4);    // D5
+        // 建立音效播放器
+        function playDingDong() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 
-                this.playNote(440.00, t*15, t*2);    // A4
-                this.playNote(587.33, t*17, t*2);    // D5
-                this.playNote(523.25, t*19, t*2);    // C5
-                this.playNote(440.00, t*21, t*2);    // A4
-                this.playNote(392.00, t*23, t*4);    // G4
-            },
+                // 第 1 個音
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+                gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start();
+                osc1.stop(audioCtx.currentTime + 0.4);
 
-            // 2. 連續緊急警報音 (逼逼逼大聲重複，長度約 2 秒，絕對不會漏聽)
-            longalert() {
-                this.init();
-                const speed = 0.22;
-                for (let i = 0; i < 6; i++) {
-                    this.playNote(880, i * speed, 0.12, 'square', 0.15); // 使用方波(Square)聽起來更響亮響徹
-                }
-            },
-
-            // 3. 輕快出餐小短曲 (愉快的上行大調和弦音)
-            melodic() {
-                this.init();
-                this.playNote(261.63, 0, 0.2);   // C4
-                this.playNote(329.63, 0.15, 0.2); // E4
-                this.playNote(392.00, 0.3, 0.2);  // G4
-                this.playNote(523.25, 0.45, 0.2); // C5
-                this.playNote(659.25, 0.6, 0.4);  // E5
-                this.playNote(783.99, 0.8, 0.6);  // G5
-            },
-
-            // 4. 原版經典叮咚音
-            classic() {
-                this.init();
-                this.playNote(587.33, 0, 0.4);
-                setTimeout(() => this.playNote(440.00, 0, 0.6), 180);
+                // 第 2 個音
+                setTimeout(() => {
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(440.00, audioCtx.currentTime); 
+                    gain2.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.start();
+                    osc2.stop(audioCtx.currentTime + 0.6);
+                }, 180);
+            } catch (e) {
+                console.error("音效播放失敗: ", e);
             }
-        };
-
-        // 點選測試按鈕時觸發
-        function triggerSelectedSound() {
-            const selectedType = document.getElementById('sound-select-menu').value;
-            if (SoundEngine[selectedType]) {
-                SoundEngine[selectedType]();
-            }
-        }
-
-        // 把使用者選的音效偏好存到瀏覽器，下次重新整理不會跑掉
-        function saveSoundPreference() {
-            const val = document.getElementById('sound-select-menu').value;
-            localStorage.setItem('珍愛家後台音效選擇', val);
-            triggerSelectedSound(); // 切換時順便播放給老闆聽看看
         }
 
         let lastKnownTopOrderKey = null;
@@ -216,32 +152,29 @@
                 // 排序：新訂單排在最上方
                 ordersArray.sort((a, b) => (b.timestamp || b.id) - (a.timestamp || a.id));
 
-                // 🌟 新訂單自動響鈴邏輯：套用自訂選擇的長音效
+                // 新訂單自動響鈴邏輯
                 if (ordersArray.length > 0) {
                     const currentTopKey = ordersArray[0].firebaseKey;
                     if (lastKnownTopOrderKey !== null && lastKnownTopOrderKey !== currentTopKey) {
                         if (ordersArray[0].status === '新訂單') {
-                            const currentSoundSetting = document.getElementById('sound-select-menu').value;
-                            if (SoundEngine[currentSoundSetting]) {
-                                SoundEngine[currentSoundSetting]();
-                            }
+                            playDingDong();
                         }
                     }
                     lastKnownTopOrderKey = currentTopKey;
                 }
 
+                // 呼姐畫面渲染
                 renderAdminTable(ordersArray); 
             }, (error) => {
                 console.error("後台讀取 Firebase 失敗:", error);
             });
         }
 
-        // 3. 畫面繪製功能
+        // 3. 畫面繪製功能 (🌟 已修正欄位拼錯導致的 undefined 與空白問題)
         function renderAdminTable(orders) {
             const tbody = document.getElementById('orders-tbody');
-            if (!tbody) return; // 安全防護
-
             let html = '';
+
             orders.forEach(order => {
                 let statusClass = 'status-new';
                 let actionButtonHtml = `<button class="action-btn" onclick="updateOrderStatus('${order.firebaseKey}', '已出餐')">完成出餐 ✔</button>`;
@@ -251,12 +184,16 @@
                     actionButtonHtml = `<span style="color:#27ae60; font-size:13px; font-weight:bold;">★ 已處理完畢</span>`;
                 }
 
+                // 取得日期與時間 (已將錯誤的 order.oDate 修正為正確的 order.date)
+                let displayDate = order.date || '';
+                let displayTime = order.time || '';
+
                 html += `
                     <tr>
                         <td style="font-weight:bold; color:var(--accent-color);">#${order.id || '---'}</td>
                         <td>
                             <div style="font-weight:600;">${order.type || '未填'}</div>
-                            <div style="font-size:12px; color:#888; margin-top:2px;">下單時間: ${order.date || ''} ${order.time || ''}</div>
+                            <div style="font-size:12px; color:#888; margin-top:2px;">下單時間: ${displayDate} ${displayTime}</div>
                         </td>
                         <td>
                             <div>📞 ${order.phone || '無'}</div>
@@ -275,105 +212,13 @@
         }
 
         // 4. 更新訂單狀態功能
-       // 3. 畫面繪製功能（全新升級：品項內建清晰大排版表格 + 分類彩色標籤）
-        function renderAdminTable(orders) {
-            const tbody = document.getElementById('orders-tbody');
-            if(!tbody) return; // 安全防護
-            
-            let html = '';
-
-            orders.forEach(order => {
-                let statusClass = 'status-new';
-                let actionButtonHtml = `<button class="action-btn" onclick="updateOrderStatus('${order.firebaseKey}', '已出餐')">完成出餐 ✔</button>`;
-                
-                if (order.status === '已出餐' || order.status === '已完成') {
-                    statusClass = 'status-done';
-                    actionButtonHtml = `<span style="color:#27ae60; font-size:13px; font-weight:bold;">★ 已處理完畢</span>`;
-                }
-
-                let displayDate = order.date || '';
-                let displayTime = order.time || '';
-
-                // 🌟 【核心修改】將訂單品項字串解析，並封裝成精美、極簡、易讀的小表格
-                let itemsTableHtml = '';
-                if (order.items) {
-                    // 建立小表格的 HTML 結構，移除大框線，改用乾淨的下底線與舒適的間距
-                    itemsTableHtml = `
-                        <table style="width:100%; border-collapse:collapse; margin:0; background:transparent; font-size:14px;">
-                            <thead>
-                                <tr style="background:#f1f2f6; color:#555; font-size:12px;">
-                                    <th style="padding:6px 10px; border-bottom:2px solid #ced6e0; text-align:left;">餐點名稱</th>
-                                    <th style="padding:6px 10px; border-bottom:2px solid #ced6e0; text-align:center; width:50px;">數量</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-                    // 判斷 items 是陣列（新格式）還是換行字串（舊格式）
-                    if (Array.isArray(order.items)) {
-                        order.items.forEach(item => {
-                            // 🔍 自動分類邏輯：根據餐點名稱自動判斷種類並給予不同顏色的精美標籤
-                            let categoryBadge = '';
-                            const name = item.fullName || '';
-                            
-                            if (name.includes('漢堡') || name.includes('吐司') || name.includes('拼盤') || name.includes('飯') || name.includes('麵')) {
-                                categoryBadge = `<span style="background:#e8f4fd; color:#1e88e5; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">主餐</span>`;
-                            } else if (name.includes('蛋餅') || name.includes('抓餅')) {
-                                categoryBadge = `<span style="background:#fef5e7; color:#f39c12; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">蛋餅</span>`;
-                            } else if (name.includes('紅茶') || name.includes('奶茶') || name.includes('豆漿') || name.includes('咖啡') || name.includes('飲') || name.includes('汁')) {
-                                categoryBadge = `<span style="background:#eafaf1; color:#2ecc71; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">飲料</span>`;
-                            } else {
-                                categoryBadge = `<span style="background:#f4f6f7; color:#7f8c8d; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">點心</span>`;
-                            }
-
-                            itemsTableHtml += `
-                                <tr style="border-bottom:1px solid #eee;">
-                                    <td style="padding:8px 10px; text-align:left; font-weight:600; color:#2c3e50;">${categoryBadge}${name}</td>
-                                    <td style="padding:8px 10px; text-align:center; font-weight:bold; color:#e67e22; font-size:15px;">${item.qty || 1}</td>
-                                </tr>
-                            `;
-                        });
-                    } else {
-                        // 舊資料相容處理：如果是以前測試的純文字字串，將它依換行拆開切片呈現
-                        const textLines = order.items.split('\n');
-                        textLines.forEach(line => {
-                            if(line.trim() === '') return;
-                            itemsTableHtml += `
-                                <tr style="border-bottom:1px solid #eee;">
-                                    <td style="padding:8px 10px; text-align:left; font-weight:600; color:#2c3e50;">${line}</td>
-                                    <td style="padding:8px 10px; text-align:center; font-weight:bold; color:#e67e22;">-</td>
-                                </tr>
-                            `;
-                        });
-                    }
-
-                    itemsTableHtml += `</tbody></table>`;
-                } else {
-                    itemsTableHtml = '<span style="color:#aaa;">無明細</span>';
-                }
-
-                html += `
-                    <tr>
-                        <td style="font-weight:bold; color:var(--accent-color); font-size:16px;">#${order.id || '---'}</td>
-                        <td>
-                            <div style="font-weight:600; font-size:15px; color:#2c3e50;">${order.type || '未填'}</div>
-                            <div style="font-size:12px; color:#888; margin-top:4px;">下單: ${displayDate} ${displayTime}</div>
-                        </td>
-                        <td>
-                            <div style="font-weight:600;">📞 ${order.phone || '無'}</div>
-                            <div style="font-size:12px; color:#10b981; margin-top:3px; font-weight:500;">LINE: ${order.line || '無'}</div>
-                        </td>
-                        <td style="padding:8px; background:#fafafa; width:320px; border-left:3px solid #ced6e0;">${itemsTableHtml}</td>
-                        <td><div class="note-text" style="font-weight:500;">${order.note || '無'}</div></td>
-                        <td style="font-weight:bold; color:#d63031; font-size:18px;">$${order.total || 0}</td>
-                        <td><span class="status-badge ${statusClass}">${order.status || '新訂單'}</span></td>
-                        <td>${actionButtonHtml}</td>
-                    </tr>
-                `;
+        function updateOrderStatus(firebaseKey, newStatus) {
+            database.ref(`orders/${firebaseKey}`).update({
+                status: newStatus
+            })
+            .catch(err => {
+                alert('更改狀態失敗: ' + err.message);
             });
-
-            tbody.innerHTML = html;
-        }
         }
 
         // 5. 清空所有歷史訂單功能
@@ -389,14 +234,7 @@
             }
         }
 
-        // 網頁載入時初始化
         window.onload = function() {
-            // 自動回復先前儲存的音效選擇
-            const savedSound = localStorage.getItem('珍愛家後台音效選擇');
-            if (savedSound && document.getElementById('sound-select-menu')) {
-                document.getElementById('sound-select-menu').value = savedSound;
-            }
-            
             listenToFirebaseOrders();
         };
     </script>
