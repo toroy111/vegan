@@ -3,283 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>珍愛家素食早午餐 - 訂單管理後台</title>
+    <title>珍愛家素食早午餐 - 後台接單系統</title>
     <style>
-        :root {
-            --primary-color: #27ae60;
-            --secondary-color: #e67e22;
-            --bg-color: #f4f6f9;
-            --dark-color: #2c3e50;
-            --danger-color: #c0392b;
-        }
+        :root { --primary-color: #2c3e50; --accent-color: #e67e22; --success-color: #27ae60; --bg-color: #ecf0f1; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
-        body { background-color: var(--bg-color); color: var(--dark-color); padding: 20px; }
+        body { background-color: var(--bg-color); padding: 20px; color: #333; }
+        header { background: var(--primary-color); color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         
-        header { background-color: var(--primary-color); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
-        header h1 { font-size: 24px; }
+        .dashboard { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { margin-bottom: 15px; font-size: 18px; border-left: 4px solid var(--accent-color); padding-left: 10px; }
         
-        .header-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .refresh-btn { background: white; color: var(--primary-color); border: 2px solid white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
-        .refresh-btn:hover { background: rgba(255,255,255,0.9); transform: scale(1.02); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; color: #555; font-weight: bold; }
+        tr:hover { background-color: #fdfaf7; }
         
-        /* 頂端大清空按鈕 */
-        .clear-all-btn { background-color: #e74c3c; color: white; border: 2px solid #e74c3c; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
-        .clear-all-btn:hover { background-color: var(--danger-color); border-color: var(--danger-color); transform: scale(1.02); }
-
-        .volume-control { display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.2); padding: 6px 12px; border-radius: 20px; color: white; font-size: 14px; }
-        .volume-control input[type=range] { width: 90px; cursor: pointer; accent-color: var(--secondary-color); }
-
-        .status-bar { background: #fff; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #7f8c8d; border-left: 5px solid var(--secondary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-new { background-color: #ffeaa7; color: #d63031; animation: blink 1.5s infinite; }
+        .status-done { background-color: #dff9fb; color: #27ae60; }
         
-        .orders-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
-        .order-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; border-top: 6px solid var(--secondary-color); position: relative; display: flex; flex-direction: column; justify-content: space-between; transition: 0.3s; }
-        .order-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        .action-btn { background-color: var(--success-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .action-btn:hover { background-color: #219653; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .clear-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .audio-btn { background-color: #34495e; color: #cbd5e0; border: 1px solid #455a64; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-right: 10px; }
         
-        .order-header { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px dashed #edf2f7; padding-bottom: 10px; }
-        .order-time { font-size: 12px; color: #95a5a6; }
-        .order-id { font-weight: bold; color: var(--dark-color); }
+        .item-list-text { font-size: 14px; line-height: 1.5; color: #2c3e50; }
+        .note-text { color: #7f8c8d; font-size: 13px; font-style: italic; max-width: 200px; word-break: break-all; }
         
-        .info-row { font-size: 14px; margin-bottom: 6px; display: flex; }
-        .info-label { color: #7f8c8d; min-width: 85px; font-weight: 500; }
-        .info-value { color: #34495e; font-weight: bold; }
-        
-        .type-badge { background: #ffeaa7; color: #d63031; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .type-badge.inside { background: #dff9fb; color: #0984e3; }
-        
-        .items-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 14px; max-height: 180px; overflow-y: auto; border: 1px solid #edf2f7; }
-        .item-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f1f2f6; }
-        .item-row:last-child { border-bottom: none; }
-        
-        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf2f7; gap: 10px; }
-        .total-price { color: #e74c3c; font-size: 20px; font-weight: bold; }
-        
-        .done-btn { background-color: #27ae60; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
-        .done-btn:hover { background-color: #219653; }
-
-        .loading { text-align: center; padding: 50px; font-size: 18px; color: #7f8c8d; width: 100%; grid-column: 1 / -1; }
-        .no-data { text-align: center; padding: 50px; font-size: 18px; color: #95a5a6; width: 100%; grid-column: 1 / -1; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🍳 珍愛家素食早午餐 - 訂單管理後台</h1>
-        <div class="header-controls">
-            <div class="volume-control">
-                <span id="vol-icon">🔊</span>
-                <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.8" onchange="updateVolume(this.value)">
-                <span id="vol-text">80%</span>
-            </div>
-            <button class="refresh-btn" onclick="fetchOrders()">🔄 手動整理訂單</button>
-            <button class="clear-all-btn" onclick="clearAllOrders()">🗑️ 清空所有歷史紀錄</button>
+        <div>
+            <h1 style="font-size: 22px;">🍳 珍愛家早午餐 - 即時接單後台 🔔</h1>
+            <p style="font-size: 12px; opacity: 0.8; margin-top: 3px;">系統已啟動音效監聽 (每 5 秒自動刷單)</p>
+        </div>
+        <div>
+            <button class="audio-btn" onclick="playDingDong()">🔊 測試音效</button>
+            <button class="clear-btn" onclick="clearAllOrders()">🧹 清空歷史訂單紀錄</button>
         </div>
     </header>
 
-    <div class="status-bar" id="status-text">
-        系統狀態：正在準備載入訂單資料... (請點擊頁面任意處以啟用音效提醒)
+    <div class="dashboard">
+        <div class="card">
+            <h2>📥 當日點餐訂單列表 (最新訂單排在最上方)</h2>
+            <table id="orders-table">
+                <thead>
+                    <tr>
+                        <th>單號</th>
+                        <th>取餐時間/方式</th>
+                        <th>聯絡電話 / LINE</th>
+                        <th>點餐品項明細 (數量)</th>
+                        <th>備註</th>
+                        <th>總金額</th>
+                        <th>目前狀態</th>
+                        <th>出餐操作</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-tbody">
+                    </tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="orders-container" id="orders-list">
-        <div class="loading">正在努力加載最新訂單，請稍候...</div>
-    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // ⚠️【請將這裡換成你從 Google 部署得到的同一個 Web App 網址】⚠️
-        const API_URL = "https://script.google.com/macros/s/AKfycbyY4CsSl45gr8h30UKNU_3W6g7SBDxw8HqH_J2tuDKlO_DauNegE_VWiWOvAuyfqc6H/exec";
+        // 2. 🌟 後台的 Firebase 設定 (必須與點餐網頁一模一樣)
+        const firebaseConfig = {
+            apiKey: "AlzaSyAgeP2a6Z-TqJaZ5F0j_2UoXVQ_WE3sckw",
+            authDomain: "jafff-34d02.firebaseapp.com",
+            projectId: "jafff-34d02",
+            storageBucket: "jafff-34d02.firebasestorage.app",
+            messagingSenderId: "332430248808",
+            appId: "1:332430248808:web:b81a52b4c3b15021e664dd",
+            measurementId: "G-T9YGSE9EX6",
+            databaseURL: "https://jaffff-34d02-default-rtdb.firebaseio.com" // 資料庫網址
+        };
 
-        let previousOrderCount = -1; 
-        let globalVolume = 0.8;      
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playNotificationSound() {
-            try {
-                if (globalVolume === 0) return;
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.type = 'sine'; 
-                oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
-                oscillator.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.15); 
-                gainNode.gain.setValueAtTime(globalVolume, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.4);
-            } catch(e) { console.log(e); }
-        }
+        // 3. 🌟 重頭戲：改寫後台「載入訂單」的函式
+        // 請找到你原本後台類似 loadOrders() 或 fetchOrders() 的位置，改用以下邏輯：
+        function listenToFirebaseOrders() {
+            // 連線到 orders 節點
+            const ordersRef = database.ref('orders');
 
-        function updateVolume(val) {
-            globalVolume = parseFloat(val);
-            document.getElementById('vol-text').innerText = Math.round(globalVolume * 100) + "%";
-            document.getElementById('vol-icon').innerText = globalVolume === 0 ? "🔇" : (globalVolume < 0.5 ? "🔉" : "🔊");
-            playNotificationSound();
-        }
-
-        // 載入訂單資料
-        function fetchOrders() {
-            if(API_URL === "https://script.google.com/macros/s/AKfycbxV8yNlyeuA6GzXtMRPg73P4YCS4B5crTRo0NQby3Z2xXTWFo5qTb10_LXeCpqFfmD2/exec") {
-                document.getElementById('orders-list').innerHTML = `<div class="no-data">⚠️ 請先在 admin.html 程式碼中設定您的 API_URL 網址！</div>`;
-                return;
-            }
-
-            document.getElementById('status-text').innerText = "系統狀態：正在獲取最新訂單...";
-            
-            fetch(`${API_URL}?action=getOrders`)
-                .then(response => response.json())
-                .then(data => {
-                    if (previousOrderCount !== -1 && data.length > previousOrderCount) {
-                        playNotificationSound();
-                    }
-                    previousOrderCount = data.length; 
-
-                    renderOrders(data);
-                    const now = new Date();
-                    document.getElementById('status-text').innerText = `系統狀態：更新成功！最後更新時間：${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}（每 30 秒自動檢查新訂單）`;
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('status-text').innerText = "系統狀態：連線失敗或試算表中尚無點餐紀錄。";
-                    document.getElementById('orders-list').innerHTML = `<div class="no-data">📭 目前 Google 試算表中沒有任何訂單紀錄喔！</div>`;
-                });
-        }
-
-        // 單筆刪除/完成
-        function deleteOrder(rowId, orderNum) {
-            if (!confirm(`確定要將「訂單 #${orderNum}」標記為完成並從試算表刪除嗎？`)) return;
-
-            document.getElementById('status-text').innerText = `系統狀態：正在移除訂單 #${orderNum}...`;
-            
-            fetch(`${API_URL}?action=deleteOrder&rowId=${rowId}`)
-                .then(response => response.text())
-                .then(() => {
-                    alert(`🎉 訂單 #${orderNum} 已完成！`);
-                    fetchOrders(); 
-                })
-                .catch(err => { console.error(err); });
-        }
-
-        // 🌟 核心功能：清空所有試算表歷史訂單
-        function clearAllOrders() {
-            if (!confirm("⚠️ 注意：您即將清空 Google 試算表內『所有』客人的點餐紀錄！此操作無法復原。確定要清空嗎？")) return;
-            if (!confirm("🚨 再次確認：您真的要刪除全部歷史紀錄嗎？")) return;
-
-            document.getElementById('status-text').innerText = "系統狀態：正在清空試算表所有紀錄...";
-            
-            fetch(`${API_URL}?action=clearAllOrders`)
-                .then(response => response.text())
-                .then(result => {
-                    if(result === "Clear Success") {
-                        alert("🗑️ 已成功清空 Google 試算表內所有訂單紀錄！");
-                    } else {
-                        alert("ℹ️ 試算表目前本來就是空的唷！");
-                    }
-                    previousOrderCount = 0;
-                    fetchOrders(); // 重新整理網頁畫面
-                })
-                .catch(err => {
-                    alert("清空失敗，請檢查網路！");
-                    console.error(err);
-                });
-        }
-
-        // 渲染訂單
-        function renderOrders(orders) {
-            const container = document.getElementById('orders-list');
-            container.innerHTML = '';
-
-            if (!orders || orders.length === 0) {
-                container.innerHTML = '<div class="no-data">📭 目前暫無任何新訂單。</div>';
-                return;
-            }
-
-            orders.reverse();
-
-            orders.forEach((order, index) => {
-                let itemsArray = [];
-                try {
-                    itemsArray = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-                } catch(e) { itemsArray = []; }
-
-                let itemsHtml = '';
-                if(Array.isArray(itemsArray)) {
-                    itemsArray.forEach(item => {
-                        itemsHtml += `
-                            <div class="item-row">
-                                <span>📌 ${item.fullName || item.name}</span>
-                                <span style="font-weight:bold; color:var(--secondary-color);">x ${item.qty}</span>
-                            </div>
-                        `;
-                    });
-                } else {
-                    itemsHtml = `<div class="item-row"><span>${order.items || '無明細'}</span></div>`;
+            // 使用 .on('value', ...) 達到「免重新整理，全自動即時更新」的效果！
+            ordersRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                
+                // 如果資料庫內完全沒有訂單
+                if (!data) {
+                    // 這裡換成你原本後台顯示「無訂單」的 HTML 渲染邏輯
+                    document.getElementById('admin-order-list').innerHTML = '<p>目前沒有新訂單</p>';
+                    return;
                 }
 
-                const typeClass = order.type === '內用' ? 'inside' : '';
-                const displayNum = orders.length - index; 
+                // 將 Firebase 的物件格式轉換為陣列，並依照時間戳排序（新訂單在最上面）
+                const ordersArray = [];
+                Object.keys(data).forEach(key => {
+                    ordersArray.push({
+                        firebaseKey: key, // 這條訂單在 Firebase 的隨機亂數 ID
+                        ...data[key]       // 訂單內容 (id, phone, items, total, status...)
+                    });
+                });
 
-                const card = document.createElement('div');
-                card.className = 'order-card';
-                card.innerHTML = `
-                    <div>
-                        <div class="order-header">
-                            <span class="order-id">#訂單 ${displayNum}</span>
-                            <span class="order-time">${order.timestamp || '剛剛'}</span>
-                        </div>
-                        
-                        <div class="info-row">
-                            <span class="info-label">📅 取餐日期</span>
-                            <span class="info-value">${order.date || '未填'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">🍽️ 填寫方式</span>
-                            <span class="info-value"><span class="type-badge ${typeClass}">${order.type || '外帶'}</span></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">👤 桌號/姓名</span>
-                            <span class="info-value" style="color:#2980b9;">${order.tableNum || '未填'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">📞 聯絡電話</span>
-                            <span class="info-value">${order.phone || '未填'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">💬 LINE ID</span>
-                            <span class="info-value" style="font-weight:normal; color:#7f8c8d;">${order.line || '無'}</span>
-                        </div>
-                        
-                        <div class="items-box">
-                            <div style="font-weight:bold; margin-bottom:6px; font-size:12px; color:#95a5a6;">🛒 點餐明細：</div>
-                            ${itemsHtml}
-                        </div>
-                        
-                        <div class="info-row" style="margin-top:10px;">
-                            <span class="info-label">✍️ 訂單備註</span>
-                            <span class="info-value" style="font-weight:normal; color:#e67e22; font-size:13px;">${order.note || '無'}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="order-footer">
-                        <div>
-                            <div style="font-size:11px; color:#95a5a6; font-weight:bold;">總計金額</div>
-                            <div class="total-price">$${order.total || 0}</div>
-                        </div>
-                        <button class="done-btn" onclick="deleteOrder(${order.rowId}, ${displayNum})">✔ 出餐完成</button>
-                    </div>
-                `;
-                container.appendChild(card);
+                // 排序：新訂單排在上方 (利用剛才幫你加入的 timestamp)
+                ordersArray.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+                // 4. 🌟 呼叫你原本後台將資料繪製到畫面上的函式
+                //（請把 ordersArray 傳入你原本負責渲染畫面的 function）
+                renderAdminTable(ordersArray); 
+            }, (error) => {
+                console.error("後台讀取 Firebase 失敗:", error);
             });
         }
 
-        window.onload = function() {
-            fetchOrders();
-            setInterval(fetchOrders, 30000); 
-            
-            document.body.addEventListener('click', function() {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-            }, { once: true });
+        // 5. 🌟 額外加碼：如果你的後台有「修改訂單狀態」或「刪除/接單」按鈕，改寫邏輯如下：
+        function updateOrderStatus(firebaseKey, newStatus) {
+            // 直接指定該筆訂單的 Key，去更新裡面的 status 欄位
+            database.ref(`orders/${firebaseKey}`).update({
+                status: newStatus
+            })
+            .then(() => {
+                alert(`訂單狀態已更新為: ${newStatus}`);
+                // 注意：因為上面用了 .on('value') 監聽，這裡不需要手動重新載入，畫面會自己變！
+            })
+            .catch(err => alert('更新失敗: ' + err.message));
         }
+
+        // 網頁載入完成後，啟動 Firebase 即時監聽
+        window.onload = function() {
+            listenToFirebaseOrders();
+        };
     </script>
 </body>
 </html>
