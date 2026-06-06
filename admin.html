@@ -30,20 +30,17 @@
         .logout-btn { background-color: #7f8c8d; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; margin-left: 10px; }
         .logout-btn:hover { background-color: #95a5a6; }
         
-        /* 音效下拉選單樣式 */
         .audio-select { background-color: #34495e; color: #fff; border: 1px solid #455a64; padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; outline: none; margin-right: 8px; }
         
-        /* 🎨 點餐明細空間優化與分類區塊 CSS */
         .item-list-text { font-size: 14px; line-height: 1.5; color: #2c3e50; }
         
-        /* 分類大外框 */
         .category-block { margin-bottom: 8px; background: #f8f9fa; border-radius: 6px; padding: 6px 10px; border-left: 4px solid #7f8c8d; }
-        .cat-main { border-left-color: #e67e22; background: #fff9f5; }   /* 主食橘色 */
-        .cat-egg { border-left-color: #f1c40f; background: #fffdf0; }     /* 蛋餅黃色 */
-        .cat-noodle { border-left-color: #9b59b6; background: #fbf6fc; } /* 麵食紫色 */
-        .cat-drink { border-left-color: #2ecc71; background: #f4fbf7; }  /* 飲料綠色 */
-        .cat-snack { border-left-color: #3498db; background: #f5faff; }  /* 小吃藍色 */
-        .cat-toast { border-left-color: #e67e22; background: #fffcf9; }  /* 果醬吐司 */
+        .cat-main { border-left-color: #e67e22; background: #fff9f5; }   
+        .cat-egg { border-left-color: #f1c40f; background: #fffdf0; }     
+        .cat-noodle { border-left-color: #9b59b6; background: #fbf6fc; } 
+        .cat-drink { border-left-color: #2ecc71; background: #f4fbf7; }  
+        .cat-snack { border-left-color: #3498db; background: #f5faff; }  
+        .cat-toast { border-left-color: #e67e22; background: #fffcf9; }  
 
         .category-title { font-size: 12px; font-weight: bold; color: #7f8c8d; margin-bottom: 4px; text-transform: uppercase; }
         .cat-main .category-title { color: #d35400; }
@@ -56,7 +53,6 @@
         .food-row:last-child { border-bottom: none; }
         .food-title { font-weight: bold; color: #2c3e50; }
         
-        /* 規格與客製化標籤 */
         .spec-badge { background-color: #edf2f7; color: #4a5568; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #e2e8f0; }
         .combo-badge { background-color: #e3faf2; color: #0ca678; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #96f2d7; }
         .custom-badge { background-color: #fff4e6; color: #d9480f; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #ffd8a8; }
@@ -162,20 +158,19 @@
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        let ordersRefObject = null; // 用於儲存 Firebase 監聽實例
+        let ordersRefObject = null; 
 
-        // 🔐 登入驗證功能
+        // 🔐 登入驗證功能 (已修正卡住問題)
         function checkLogin() {
             const userField = document.getElementById('login-username').value.trim();
             const passwordField = document.getElementById('login-password').value;
             const errorDiv = document.getElementById('login-error');
             
-            // 預設帳密驗證
             if (userField === "admin" && passwordField === "8888") {
                 errorDiv.style.display = "none";
+                // 修正點：不論資料庫狀態，點擊後「立刻先隱藏遮罩」進入後台
                 document.getElementById('login-overlay').style.display = "none";
                 
-                // 登入成功，記錄在本地瀏覽器暫存 (關閉分頁即失效)
                 sessionStorage.setItem('珍愛家後台登入狀態', 'true');
                 listenToFirebaseOrders();
             } else {
@@ -185,33 +180,10 @@
             }
         }
 
-        // 🚪 登出系統功能
         function logoutAdmin() {
             if (confirm('確定要登出系統並返回登入畫面嗎？')) {
-                // 清除登入狀態
                 sessionStorage.removeItem('珍愛家後台登入狀態');
-                
-                // 斷開 Firebase 即時監聽，防止洩漏資料
                 if (ordersRefObject) {
                     ordersRefObject.off();
                 }
-                
-                // 清空畫面的資料，還原為初始狀態
-                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">連線中，請稍候...</td></tr>`;
-                document.getElementById('login-username').value = "";
-                document.getElementById('login-password').value = "";
-                
-                // 重新把登入畫面蓋上
-                document.getElementById('login-overlay').style.display = "flex";
-                document.getElementById('login-username').focus();
-            }
-        }
-
-        // 🎵 整合音效選單的多波形皇家鈴聲產生器
-        function playDingDong() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const soundType = document.getElementById('audio-sound-type').value;
-
-                if (soundType === 'classic') {
-                    // 1. 傳統叮咚二
+                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">連線中，
