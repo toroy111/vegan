@@ -14,8 +14,8 @@
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         h2 { margin-bottom: 15px; font-size: 18px; border-left: 4px solid var(--accent-color); padding-left: 10px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; word-wrap: break-word; }
         th { background-color: #f8f9fa; color: #555; font-weight: bold; }
         tr:hover { background-color: #fdfaf7; }
         
@@ -23,25 +23,40 @@
         .status-new { background-color: #ffeaa7; color: #d63031; animation: blink 1.5s infinite; }
         .status-done { background-color: #dff9fb; color: #27ae60; }
         
-        .action-btn { background-color: var(--success-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .action-btn { background-color: var(--success-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
         .action-btn:hover { background-color: #219653; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .clear-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .audio-btn { background-color: #34495e; color: #cbd5e0; border: 1px solid #455a64; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-right: 10px; }
         
-        /* 🎨 新增與優化的明細排版 CSS */
-        .item-list-text { font-size: 14px; line-height: 1.6; color: #2c3e50; }
-        .food-row { margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #f1f3f5; }
-        .food-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        .food-title { font-weight: bold; color: #2c3e50; display: inline-block; }
+        /* 🎨 點餐明細空間優化與分類區塊 CSS */
+        .item-list-text { font-size: 14px; line-height: 1.5; color: #2c3e50; }
         
-        /* 規格小徽章 */
-        .spec-badge { background-color: #edf2f7; color: #4a5568; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; display: inline-block; border: 1px solid #e2e8f0; }
-        /* 套餐高亮徽章 */
-        .combo-badge { background-color: #e3faf2; color: #0ca678; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; display: inline-block; border: 1px solid #96f2d7; }
-        /* 獨立客製化備註徽章 */
-        .custom-badge { background-color: #fff4e6; color: #d9480f; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; display: inline-block; border: 1px solid #ffd8a8; }
+        /* 分類大外框 */
+        .category-block { margin-bottom: 8px; background: #f8f9fa; border-radius: 6px; padding: 6px 10px; border-left: 4px solid #7f8c8d; }
+        .cat-main { border-left-color: #e67e22; background: #fff9f5; }   /* 主食橘色 */
+        .cat-egg { border-left-color: #f1c40f; background: #fffdf0; }    /* 蛋餅黃色 */
+        .cat-noodle { border-left-color: #9b59b6; background: #fbf6fc; } /* 麵食紫色 */
+        .cat-drink { border-left-color: #2ecc71; background: #f4fbf7; }  /* 飲料綠色 */
+        .cat-snack { border-left-color: #3498db; background: #f5faff; }  /* 小吃藍色 */
+        .cat-toast { border-left-color: #e67e22; background: #fffcf9; }  /* 果醬吐司 */
+
+        .category-title { font-size: 12px; font-weight: bold; color: #7f8c8d; margin-bottom: 4px; text-transform: uppercase; }
+        .cat-main .category-title { color: #d35400; }
+        .cat-egg .category-title { color: #b7950b; }
+        .cat-noodle .category-title { color: #8e44ad; }
+        .cat-drink .category-title { color: #27ae60; }
+        .cat-snack .category-title { color: #2980b9; }
         
-        .note-text { color: #e67e22; font-size: 13px; font-weight: bold; background-color: #fff9db; padding: 6px 10px; border-radius: 6px; border-left: 3px solid #f59f00; max-width: 220px; word-break: break-all; }
+        .food-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 3px 0; border-bottom: 1px dashed #e2e8f0; }
+        .food-row:last-child { border-bottom: none; }
+        .food-title { font-weight: bold; color: #2c3e50; }
+        
+        /* 規格與客製化標籤 */
+        .spec-badge { background-color: #edf2f7; color: #4a5568; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #e2e8f0; }
+        .combo-badge { background-color: #e3faf2; color: #0ca678; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #96f2d7; }
+        .custom-badge { background-color: #fff4e6; color: #d9480f; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #ffd8a8; }
+        
+        .note-text { color: #c0392b; font-size: 13px; font-weight: bold; background-color: #fdf2f2; padding: 6px 10px; border-radius: 6px; border-left: 3px solid #e74c3c; word-break: break-all; }
         .note-empty { color: #aaa; font-size: 13px; font-style: italic; }
         
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
@@ -66,14 +81,14 @@
             <table id="orders-table">
                 <thead>
                     <tr>
-                        <th>單號</th>
-                        <th>取餐時間/方式</th>
-                        <th>聯絡電話 / LINE</th>
-                        <th style="width: 40%;">點餐品項明細 (數量)</th>
-                        <th style="width: 18%;">全單大備註</th>
-                        <th>總金額</th>
-                        <th>目前狀態</th>
-                        <th>出餐操作</th>
+                        <th style="width: 7%;">單號</th>
+                        <th style="width: 14%;">取餐時間/方式</th>
+                        <th style="width: 13%;">聯絡電話 / LINE</th>
+                        <th style="width: 45%;">點餐品項明細 (依類別自動歸類)</th>
+                        <th style="width: 11%;">全單大備註</th>
+                        <th style="width: 8%;">總金額</th>
+                        <th style="width: 8%;">目前狀態</th>
+                        <th style="width: 9%;">出餐操作</th>
                     </tr>
                 </thead>
                 <tbody id="orders-tbody">
@@ -173,62 +188,100 @@
             });
         }
 
-        // 🛠️ 核心美化過濾器：將文字點餐串流轉換成乾淨的排版與標籤
-        function formatItemsToHtml(itemsString) {
+        // 🛠️ 核心歸類過濾器：將散落的商品文字解析並歸類到各自的群組
+        function formatItemsToCategorizedHtml(itemsString) {
             if (!itemsString) return '無明細';
             
-            // 將原本用逗號相連的字串打散成陣列
             const itemsArray = itemsString.split(', ');
-            let finalHtml = '';
+            
+            // 準備各大分類的容器
+            const categories = {
+                main: { title: "🥪 主食系列 (吐司/漢堡/潛艇堡)", class: "cat-main", html: "" },
+                egg: { title: "🍳 蛋餅 / 抓餅系列", class: "cat-egg", html: "" },
+                noodle: { title: "🍝 鐵板美味麵食", class: "cat-noodle", html: "" },
+                drink: { title: "🥤 特調飲品 / 湯品", class: "cat-drink", html: "" },
+                toast: { title: "🍯 果醬吐司系列", class: "cat-toast", html: "" },
+                snack: { title: "🍟 美味小吃單點", class: "cat-snack", html: "" }
+            };
 
             itemsArray.forEach(item => {
                 let currentItemText = item.trim();
                 if(!currentItemText) return;
 
+                let originText = currentItemText; // 保留原始文字做分類判斷
+
                 // 提取數量 (例如末尾的 x1, x2)
                 let qtyText = '';
                 const qtyMatch = currentItemText.match(/\s+x\d+$/);
                 if (qtyMatch) {
-                    qtyText = `<span style="color:#e67e22; font-weight:bold; font-size:15px; margin-left:5px;">${qtyMatch[0].trim()}</span>`;
-                    currentItemText = currentItemText.replace(/\s+x\d+$/, ''); // 去除數量文字以便後續解析
+                    qtyText = `<span style="color:#e67e22; font-weight:bold; font-size:14px; margin-left:4px;">${qtyMatch[0].trim()}</span>`;
+                    currentItemText = currentItemText.replace(/\s+x\d+$/, '');
                 }
 
-                // 1. 檢查並提取主食獨立備註 [備註: XXX]
+                // 1. 提取主食客製化獨立備註 [備註: XXX]
                 let customBadgeHtml = '';
                 const noteMatch = currentItemText.match(/\[備註:\s*([^\]]+)\]/);
                 if (noteMatch) {
                     customBadgeHtml = `<span class="custom-badge">✍️ ${noteMatch[1]}</span>`;
-                    currentItemText = currentItemText.replace(/\[備註:\s*[^\]]+\]/, ''); // 清除以便解析小括號
+                    currentItemText = currentItemText.replace(/\[備註:\s*[^\]]+\]/, '');
                 }
 
-                // 2. 檢查並提取小括號內容 (套餐明細或甜度規格)
+                // 2. 提取規格小括號 (套餐細節或甜度容量)
                 let specBadgeHtml = '';
                 const specMatch = currentItemText.match(/\(([^)]+)\)/);
                 if (specMatch) {
                     const specContent = specMatch[1];
                     if (specContent.includes('升級套餐:')) {
-                        // 如果是升級套餐，使用綠色醒目徽章
                         specBadgeHtml = `<span class="combo-badge">🎁 ${specContent}</span>`;
                     } else {
-                        // 一般甜度、溫度、加蛋規格使用灰色徽章
                         specBadgeHtml = `<span class="spec-badge">⚙️ ${specContent}</span>`;
                     }
-                    currentItemText = currentItemText.replace(/\([^)]+\)/, ''); // 移除小括號保留純商品名
+                    currentItemText = currentItemText.replace(/\([^)]+\)/, '');
                 }
 
-                // 組合單一菜品列
-                finalHtml += `
+                // 組合單筆餐點 row
+                let rowHtml = `
                     <div class="food-row">
-                        <span style="color:var(--accent-color); margin-right:4px;">▪</span>
-                        <div class="food-title">${currentItemText}</div>
+                        <span class="food-title">${currentItemText.trim()}</span>
                         ${qtyText}
                         ${specBadgeHtml}
                         ${customBadgeHtml}
                     </div>
                 `;
+
+                // 💡 關鍵智慧分類關鍵字判斷
+                if (originText.includes("吐司") || originText.includes("漢堡") || originText.includes("潛艇堡")) {
+                    if (originText.includes("果醬吐司")) {
+                        categories.toast.html += rowHtml;
+                    } else {
+                        categories.main.html += rowHtml;
+                    }
+                } else if (originText.includes("蛋餅") || originText.includes("抓餅")) {
+                    categories.egg.html += rowHtml;
+                } else if (originText.includes("麵") || originText.includes("套餐")) {
+                    categories.noodle.html += rowHtml;
+                } else if (originText.includes("杯") || originText.includes("茶") || originText.includes("汁") || originText.includes("豆漿") || originText.includes("咖啡") || originText.includes("湯") || originText.includes("豆乳") || originText.includes("豆奶")) {
+                    categories.drink.html += rowHtml;
+                } else {
+                    categories.snack.html += rowHtml; // 其他全歸入小吃單點
+                }
             });
 
-            return finalHtml;
+            // 串接有內容的分類區塊
+            let finalHtml = '';
+            Object.keys(categories).forEach(key => {
+                const cat = categories[key];
+                if (cat.html !== "") {
+                    finalHtml += `
+                        <div class="category-block ${cat.class}">
+                            <div class="category-title">${cat.title}</div>
+                            ${cat.html}
+                        </div>
+                    `;
+                }
+            });
+
+            return finalHtml || '無明細';
         }
 
         function renderAdminTable(orders) {
@@ -241,33 +294,32 @@
                 
                 if (order.status === '已出餐' || order.status === '已完成') {
                     statusClass = 'status-done';
-                    actionButtonHtml = `<span style="color:#27ae60; font-size:13px; font-weight:bold;">★ 已處理完畢</span>`;
+                    actionButtonHtml = `<span style="color:#27ae60; font-size:13px; font-weight:bold;">★ 已完畢</span>`;
                 }
 
                 let displayDate = order.date || '';
                 let displayTime = order.time || '';
 
-                // 處理大訂單備註的視覺（空值優雅顯示）
                 let noteHtml = `<div class="note-empty">無備註</div>`;
                 if (order.note && order.note !== '無') {
                     noteHtml = `<div class="note-text">📢 ${order.note}</div>`;
                 }
 
-                // 呼叫美化過濾器處理明細
-                let formattedItems = formatItemsToHtml(order.items);
+                // 呼叫智慧分類器[cite: 3]
+                let categorizedItemsHtml = formatItemsToCategorizedHtml(order.items);
 
                 html += `
                     <tr>
                         <td style="font-weight:bold; color:var(--accent-color);">#${order.id || '---'}</td>
                         <td>
-                            <div style="font-weight:600;">${order.type || '未填'}</div>
-                            <div style="font-size:12px; color:#888; margin-top:2px;">下單: ${displayDate} ${displayTime}</div>
+                            <div style="font-weight:600; font-size:14px;">${order.type || '未填'}</div>
+                            <div style="font-size:11px; color:#888; margin-top:2px;">下單: ${displayDate} ${displayTime}</div>
                         </td>
                         <td>
-                            <div>📞 ${order.phone || '無'}</div>
+                            <div style="font-size:13px;">📞 ${order.phone || '無'}</div>
                             <div style="font-size:12px; color:#10b981; margin-top:2px;">LINE: ${order.line || '無'}</div>
                         </td>
-                        <td><div class="item-list-text">${formattedItems}</div></td>
+                        <td><div class="item-list-text">${categorizedItemsHtml}</div></td>
                         <td>${noteHtml}</td>
                         <td style="font-weight:bold; color:#d63031; font-size:16px;">$${order.total || 0}</td>
                         <td><span class="status-badge ${statusClass}">${order.status || '新訂單'}</span></td>
