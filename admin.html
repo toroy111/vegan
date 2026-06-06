@@ -33,8 +33,8 @@
         .action-btn { background-color: var(--success-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
         .action-btn:hover { background-color: #219653; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .clear-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        .logout-btn { background-color: #e2e8f0; color: #4a5568; border: 1px solid #cbd5e0; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
-        .logout-btn:hover { background-color: #cbd5e0; color: #2d3748; }
+        .logout-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .logout-btn:hover { background-color: #c0392b; }
         .audio-btn { background-color: var(--accent-color); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .audio-btn:hover { background-color: #d35400; }
         
@@ -98,7 +98,7 @@
             </div>
             <button class="audio-btn" onclick="playDingDong()">⚡ 測試鈴聲</button>
             <button class="clear-btn" onclick="clearAllOrders()">🧹 清空紀錄</button>
-            <button class="logout-btn" onclick="handleLogout()">🚪 登出系統</button>
+            <button class="logout-btn" onclick="handleLogout()">🚪 退出後台</button>
         </div>
     </header>
 
@@ -155,7 +155,6 @@
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 
                 if (soundType === 'dingdong') {
-                    // 1. 經典叮咚
                     const osc1 = audioCtx.createOscillator();
                     const gain1 = audioCtx.createGain();
                     osc1.type = 'sine';
@@ -177,12 +176,11 @@
                     }, 180);
 
                 } else if (soundType === 'alarm') {
-                    // 2. 雙頻密集警報（強力提醒）
                     for(let i = 0; i < 3; i++) {
                         setTimeout(() => {
                             const osc = audioCtx.createOscillator();
                             const gain = audioCtx.createGain();
-                            osc.type = 'sawtooth'; // 鋸齒波，穿透力強
+                            osc.type = 'sawtooth'; 
                             osc.frequency.setValueAtTime(i % 2 === 0 ? userFreq : userFreq * 1.2, audioCtx.currentTime);
                             gain.gain.setValueAtTime(userVolume * 0.7, audioCtx.currentTime);
                             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
@@ -192,13 +190,12 @@
                     }
 
                 } else if (soundType === 'chime') {
-                    // 3. 清脆和弦音
-                    const freqs = [userFreq, userFreq * 1.25, userFreq * 1.5]; // 三和弦
+                    const freqs = [userFreq, userFreq * 1.25, userFreq * 1.5]; 
                     freqs.forEach((f, index) => {
                         setTimeout(() => {
                             const osc = audioCtx.createOscillator();
                             const gain = audioCtx.createGain();
-                            osc.type = 'triangle'; // 三角波，聲音圓潤清脆
+                            osc.type = 'triangle'; 
                             osc.frequency.setValueAtTime(f, audioCtx.currentTime);
                             gain.gain.setValueAtTime(userVolume * 0.5, audioCtx.currentTime);
                             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
@@ -208,7 +205,6 @@
                     });
 
                 } else if (soundType === 'beep') {
-                    // 4. 宏亮長鳴音
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
@@ -224,11 +220,19 @@
             }
         }
 
-        // 🚪 登出系統返回登入首頁功能
+        // 🚪 退出/登出後台管理畫面核心邏輯
         function handleLogout() {
-            if (confirm("您確定要登出並離開珍愛家早午餐管理後台嗎？")) {
-                // 導回登入首頁
-                window.location.href = "index.html";
+            if (confirm("您確定要退出當前後台畫面，關閉訂單列表嗎？")) {
+                // 1. 清除瀏覽器中儲存的後台管理登入狀態或權限 Token（若有使用的話）
+                sessionStorage.clear();
+                localStorage.removeItem('admin_authenticated');
+                
+                // 2. 徹底登出或重新整理，將畫面導向您的後台登入檢查驗證頁
+                // 如果您的登入頁檔名是 login.html，請把下面這行註解解開：
+                // window.location.href = "login.html";
+                
+                // 若是在同個檔案進行帳密管制，則直接強制刷新頁面退出狀態：
+                location.reload();
             }
         }
 
