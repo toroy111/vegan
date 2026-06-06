@@ -134,7 +134,7 @@
 
             <div class="login-links-row">
                 <a onclick="alert('本後台不開放對外註冊，請聯絡店長建立權限。')">創建帳號</a>
-                <a onclick="alert('珍愛家後台系統 V2.5\n智慧記憶模組：已啟用')">其他幫助</a>
+                <a onclick="alert('珍愛家後台系統 V2.6\n系統狀態：正常連線')">其他幫助</a>
             </div>
 
             <div id="error-toast" class="error-toast">❌ 用戶名或密碼不正確，請重新輸入</div>
@@ -182,7 +182,7 @@
                         </tr>
                     </thead>
                     <tbody id="orders-tbody">
-                        <tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">正在連線到新加坡雲端資料庫...</td></tr>
+                        <tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">正在讀取最新訂單資料...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -190,4 +190,202 @@
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AlzaSyAgeP2a6Z-TqJaZ5F0j_2UoXVQ_WE3sckw",
+            authDomain: "toroy111-3219c.firebaseapp.com",
+            projectId: "toroy111-3219c",
+            storageBucket: "toroy111-3219c.firebasestorage.app",
+            messagingSenderId: "332430248808",
+            appId: "1:332430248808:web:b81a52b4c3b15021e664dd",
+            databaseURL: "https://toroy111-3219c-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        // 🌟 修正點一：一開網頁就立刻初始化 Firebase，避免後續邏輯抓不到物件而崩潰
+        if (!firebase.apps.length) { 
+            firebase.initializeApp(firebaseConfig); 
+        }
+        const database = firebase.database();
+        let lastKnownTopOrderKey = null;
+
+        // 🔒 登入驗證功能
+        function checkLogin() {
+            const userIn = document.getElementById('username').value.trim();
+            const passIn = document.getElementById('password').value.trim();
+            const isRemember = document.getElementById('remember-check').checked;
+            const errToast = document.getElementById('error-toast');
+
+            if (userIn === "admin" && passIn === "jenaijia520") {
+                // 如果勾選記住密碼，存進永久的 localStorage
+                if (isRemember) {
+                    localStorage.setItem('jaj_admin_logged', 'true');
+                } else {
+                    sessionStorage.setItem('jaj_admin_logged', 'true');
+                }
+                showAdminDashboard();
+            } else {
+                errToast.style.display = 'block';
+                document.getElementById('password').value = '';
+                setTimeout(() => { errToast.style.display = 'none'; }, 3000);
+            }
+        }
+
+        // 顯示後台主畫面
+        function showAdminDashboard() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('admin-main-content').style.display = 'block';
+            listenToFirebaseOrders(); // 啟動監聽雲端資料
+        }
+
+        // 🚪 安全登出功能
+        function logoutSystem() {
+            if(confirm('確定要登出管理接單系統嗎？')) {
+                localStorage.removeItem('jaj_admin_logged');
+                sessionStorage.removeItem('jaj_admin_logged');
+                window.location.reload(); // 重新整理網頁，退回登入鎖定畫面
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") { checkLogin(); }
+        }
+
+        // 🎵 萬用音效發聲引擎
+        function playSystemSound(mode) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (mode === 'long') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; 
+                    notes.forEach((freq, index) => {
+                        setTimeout(() => {
+                            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                            osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                            gain.gain.setValueAtTime(0.25, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+                        }, index * 250);
+                    });
+                } else if (mode === 'dingdong') {
+                    const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
+                    osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc1.connect(gain1); gain1.connect(audioCtx.destination); osc1.start(); osc1.stop(audioCtx.currentTime + 0.4);
+                    setTimeout(() => {
+                        const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+                        osc2.frequency.setValueAtTime(440.00, audioCtx.currentTime); gain2.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                        osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.start(); osc2.stop(audioCtx.currentTime + 0.6);
+                    }, 180);
+                } else if (mode === 'alarm') {
+                    for (let i = 0; i < 4; i++) {
+                        setTimeout(() => {
+                            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                            gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+                        }, i * 200);
+                    }
+                } else if (mode === 'sci-fi') {
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.8);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.8);
+                }
+            } catch (e) { console.error("音效播放失敗: ", e); }
+        }
+
+        function testSound() {
+            const currentMode = document.getElementById('sound-mode').value;
+            playSystemSound(currentMode);
+        }
+
+        function listenToFirebaseOrders() {
+            database.ref('orders').on('value', (snapshot) => {
+                const data = snapshot.val();
+                const tbody = document.getElementById('orders-tbody');
+                if (!data) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">目前沒有任何點餐訂單紀錄</td></tr>`;
+                    lastKnownTopOrderKey = null; return;
+                }
+                const ordersArray = [];
+                Object.keys(data).forEach(key => { ordersArray.push({ firebaseKey: key, ...data[key] }); });
+                ordersArray.sort((a, b) => (b.timestamp || b.id) - (a.timestamp || a.id));
+
+                if (ordersArray.length > 0) {
+                    const currentTopKey = ordersArray[0].firebaseKey;
+                    if (lastKnownTopOrderKey !== null && lastKnownTopOrderKey !== currentTopKey) {
+                        if (ordersArray[0].status === '新訂單') {
+                            playSystemSound(document.getElementById('sound-mode').value);
+                        }
+                    }
+                    lastKnownTopOrderKey = currentTopKey;
+                }
+                renderAdminTable(ordersArray); 
+            });
+        }
+
+        function renderAdminTable(orders) {
+            const tbody = document.getElementById('orders-tbody');
+            let html = '';
+            orders.forEach(order => {
+                let statusClass = 'status-new';
+                let actionButtonHtml = `<button class="action-btn" onclick="updateOrderStatus('${order.firebaseKey}', '已出餐')">完成出餐 ✔</button>`;
+                if (order.status === '已出餐' || order.status === '已完成') {
+                    statusClass = 'status-done';
+                    actionButtonHtml = `<span style="color:#27ae60; font-size:13px; font-weight:bold;">★ 已處理完畢</span>`;
+                }
+                let itemsTableHtml = `<table style="width:100%; border-collapse:collapse; background:transparent; font-size:14px;"><tbody>`;
+                if (Array.isArray(order.items)) {
+                    order.items.forEach(item => {
+                        let badge = `<span style="background:#f4f6f7; color:#7f8c8d; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">點心</span>`;
+                        const n = item.fullName || '';
+                        if (n.includes('漢堡') || n.includes('吐司') || n.includes('麵')) badge = `<span style="background:#e8f4fd; color:#1e88e5; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">主餐</span>`;
+                        if (n.includes('蛋餅')) badge = `<span style="background:#fef5e7; color:#f39c12; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">蛋餅</span>`;
+                        if (n.includes('茶') || n.includes('奶') || n.includes('漿')) badge = `<span style="background:#eafaf1; color:#2ecc71; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:6px; font-weight:bold;">飲料</span>`;
+                        itemsTableHtml += `<tr style="border-bottom:1px solid #eee;"><td style="padding:6px; text-align:left; font-weight:600;">${badge}${n}</td><td style="padding:6px; text-align:center; color:#e67e22; font-weight:bold;">${item.qty || 1}</td></tr>`;
+                    });
+                } else {
+                    itemsTableHtml += `<tr><td>${order.items || '無明細'}</td></tr>`;
+                }
+                itemsTableHtml += '</tbody></table>';
+
+                html += `
+                    <tr>
+                        <td style="font-weight:bold; color:var(--accent-color);">#${order.id || '---'}</td>
+                        <td><div style="font-weight:600;">${order.type || '未填'}</div><div style="font-size:12px; color:#888; margin-top:2px;">${order.date || ''} ${order.time || ''}</div></td>
+                        <td><div>📞 ${order.phone || '無'}</div><div style="font-size:12px; color:#10b981; margin-top:2px;">LINE: ${order.line || '無'}</div></td>
+                        <td style="padding:6px; background:#fafafa; width:300px; border-left:3px solid #ced6e0;">${itemsTableHtml}</td>
+                        <td><div class="note-text">${order.note || '無'}</div></td>
+                        <td style="font-weight:bold; color:#d63031; font-size:16px;">$${order.total || 0}</td>
+                        <td><span class="status-badge ${statusClass}">${order.status || '新訂單'}</span></td>
+                        <td>${actionButtonHtml}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function updateOrderStatus(firebaseKey, newStatus) {
+            database.ref(`orders/${firebaseKey}`).update({ status: newStatus });
+        }
+
+        function clearAllOrders() {
+            if (confirm('⚠️ 確定要徹底清空雲端資料庫內的所有訂單紀錄嗎？')) {
+                database.ref('orders').remove().then(() => { alert('🧹 雲端資料庫已全數清空！'); });
+            }
+        }
+
+        // 🌟 修正點二：網頁載入時直接判斷。因為 Firebase 在最上方已經連線好了，這裡可以直接安全執行 showAdminDashboard()
+        window.onload = function() {
+            const isLocalLogged = localStorage.getItem('jaj_admin_logged');
+            const isSessionLogged = sessionStorage.getItem('jaj_admin_logged');
+
+            if (isLocalLogged === 'true' || isSessionLogged === 'true') {
+                showAdminDashboard();
+            }
+        };
+    </script>
+</body>
+</html>
