@@ -665,41 +665,18 @@
             database.ref('orders').push(newOrder)
            // ... 前面是你的 Firebase push(ordersRef, orderData) 邏輯 ...
             .then(() => {
-                alert('訂單已送出！謝謝您的訂購。');
-
-                // ========================================================
-                // ✨ 這裡就是放簡訊功能的地方！
-                // ========================================================
-                // 1. 準備簡訊內容（直接抓取你畫面上填寫的姓名）
-                const bossPhone = "0963726958";
-                const customerName = document.getElementById("name")?.value || "有客人"; 
-                // 💡 注意：你網頁上的欄位 id 是 "name"，所以我幫你把原本的 "customer-name" 改成 "name" 了，這樣才抓得到字！
-                
-                const smsMessage = `您好！${customerName} 已在網頁上下訂單，請您查閱後台訂單系統，謝謝！`;
-
-                // 2. 自動跳轉到手機簡訊畫面
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                const smsUrl = `sms:${bossPhone}${isIOS ? '&' : '?'}body=${encodeURIComponent(smsMessage)}`;
-
-                window.location.href = smsUrl;
-                // ========================================================
-
-                clearCart();
-                const modal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
-                modal.hide();
-            })
-            .catch((error) => {
-                console.error('儲存訂單失敗:', error);
-                alert('訂單送出失敗，請稍後再試。');
-            })
-                // 1. 準備簡訊內容（可以抓取客人的姓名與電話）
-
+                alert(`🎉 訂單 #${currentId} 已成功傳送到雲端資料庫！`);
+                localStorage.setItem('jlh_order_id_counter', currentId + 1);
+                cart = [];
+                document.getElementById('user-phone').value = '';
+                document.getElementById('user-line').value = '';
+                document.getElementById('order-note').value = '';
+                renderCart();
             })
             .catch((error) => {
                 console.error("Firebase Database 寫入失敗:", error);
                 alert("❌ 訂單傳送失敗！");
-            })
-        }
+            });
 
         function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
         function scrollToCart() {
