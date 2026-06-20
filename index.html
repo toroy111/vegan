@@ -671,6 +671,17 @@
                 document.getElementById('user-line').value = '';
                 document.getElementById('order-note').value = '';
                 renderCart();
+                // 1. 準備簡訊內容（可以抓取客人的姓名與電話）
+const bossPhone = "0963726958";
+const customerName = document.getElementById("customer-name")?.value || "有客人";
+const smsMessage = `您好！${customerName} 已在網頁上下訂單，請您查閱後台訂單系統，謝謝！`;
+
+// 2. 自動跳轉到手機簡訊畫面
+// 這裡做判斷，相容 iOS 與 Android 系統
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+const smsUrl = `sms:${bossPhone}${isIOS ? '&' : '?'}body=${encodeURIComponent(smsMessage)}`;
+
+window.location.href = smsUrl;
             })
             .catch((error) => {
                 console.error("Firebase Database 寫入失敗:", error);
