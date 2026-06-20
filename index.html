@@ -691,14 +691,14 @@
             .catch((error) => {
                 console.error('儲存訂單失敗:', error);
                 alert('訂單送出失敗，請稍後再試。');
-            });
+            })
                 // 1. 準備簡訊內容（可以抓取客人的姓名與電話）
 
             })
             .catch((error) => {
                 console.error("Firebase Database 寫入失敗:", error);
                 alert("❌ 訂單傳送失敗！");
-            });
+            })
         }
 
         function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
