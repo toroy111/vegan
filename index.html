@@ -6,7 +6,7 @@
     <title>珍愛家素食早午餐 - 摺疊分類線上點餐</title>
     <style>
         :root { --primary-color: #e67e22; --secondary-color: #27ae60; --bg-color: #f5f6fa; --dark-color: #2c3e50; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: \"PingFang TC\", \"Microsoft JhengHei\", sans-serif; }
         body { background-color: var(--bg-color); color: var(--dark-color); padding-bottom: 60px; }
         header { background-color: var(--primary-color); color: white; padding: 20px 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         header h1 { font-size: 24px; margin-bottom: 5px; }
@@ -52,7 +52,7 @@
         .item-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px dashed #edf2f7; padding-top: 10px; }
         .item-price { color: #e53e3e; font-weight: bold; font-size: 18px; }
         
-        /* ✨ 數量增減與加入按鈕包裝排版 */
+        /* 數量增減與加入按鈕包裝排版 */
         .action-container { display: flex; align-items: center; gap: 6px; }
         .item-qty-input { width: 50px; text-align: center; padding: 7px 4px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; }
         .item-qty-input:focus { border-color: var(--primary-color); }
@@ -82,7 +82,7 @@
 
     <header>
         <h1>珍愛家素食早午餐 (JLH BRUNCH)</h1>
-        <p>電話：0963726958 | 營業時間：二至五 5:30~13:00 / 六日 5:30~13:30 (每週一公休)</p>
+        <p>電話：0908-313913 | 營業時間：二至五 5:30~13:00 / 六日 5:30~13:30 (每週一公休)</p>
     </header>
 
     <div class="container">
@@ -154,7 +154,7 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 🌟 你的完整巨量原始菜單數據，100% 完美保留、不丟失任何一行
+        // 🌟 你的完整原始菜單數據
         const menuData = [
             {
                 category: "🥪 主食系列 (吐司 / 漢堡 / 潛艇堡)",
@@ -310,7 +310,6 @@
         function renderMenuItemHtml(item, catGroup) {
             let html = `<div class="menu-item"><div><div class="item-name">${item.name}</div>`;
             
-            // 1. 主食系列 (吐司/漢堡/潛艇堡)
             if (catGroup.isMainItem) {
                 html += `<div class="opt-label">選擇主食種類：</div><div class="option-group" id="type-${item.id}">`;
                 item.types.forEach((t, i) => { html += `<button class="opt-btn ${i===0?'selected':''}" onclick="updateMainPrice('${item.id}', this)">${t}</button>`; });
@@ -332,8 +331,6 @@
                 let initPrice = item.prices[firstKey] || 30;
                 html += `</div><div class="item-footer"><span class="item-price" id="price-${item.id}">$${initPrice}</span>`;
             } 
-            
-            // 2. 蛋餅與抓餅系列
             else if (catGroup.isEggCakeSection) {
                 html += `<div class="opt-label">選擇種類：</div><div class="option-group" id="spec-${item.id}">`;
                 Object.keys(item.prices).forEach((spec, idx) => { 
@@ -352,8 +349,6 @@
                 let initPrice = Object.values(item.prices)[0];
                 html += `</div><div class="item-footer"><span class="item-price" id="price-${item.id}">$${initPrice}</span>`;
             } 
-            
-            // 3. 特調冷熱飲品區
             else if (catGroup.isDrinkSection && item.prices) {
                 html += `<div class="opt-label">選擇容量大小：</div><div class="option-group" id="size-${item.id}">`;
                 Object.keys(item.prices).forEach((size, idx) => { html += `<button class="opt-btn ${idx===0?'selected':''}" onclick="updateDrinkPrice('${item.id}', this)">${size}</button>`; });
@@ -380,8 +375,6 @@
                 let initPrice = Object.values(item.prices)[0];
                 html += `</div><div class="item-footer"><span class="item-price" id="price-${item.id}">$${initPrice}</span>`;
             } 
-            
-            // 4. 麵食區 (含升級套餐下拉功能)
             else if (catGroup.isNoodleSection) {
                 html += `<div class="opt-label">選擇規格：</div><div class="option-group" id="spec-${item.id}">`;
                 Object.keys(item.prices).forEach((spec, idx) => { 
@@ -436,8 +429,6 @@
                 let initPrice = Object.values(item.prices)[0];
                 html += `</div><div class="item-footer"><span class="item-price" id="price-${item.id}">$${initPrice}</span>`;
             } 
-            
-            // 5. 果醬吐司或其他有一階規格的系列
             else if (item.prices && !item.tempOptions) {
                 html += `<div class="opt-label">選擇規格：</div><div class="option-group" id="spec-${item.id}">`;
                 Object.keys(item.prices).forEach((spec, idx) => { html += `<button class="opt-btn ${idx===0?'selected':''}" onclick="updateSpecPrice('${item.id}', ${item.prices[spec]}, this)">${spec}</button>`; });
@@ -445,8 +436,6 @@
                 let initPrice = Object.values(item.prices)[0];
                 html += `</div><div class="item-footer"><span class="item-price" id="price-${item.id}">$${initPrice}</span>`;
             } 
-            
-            // 6. 單一價格與特色單點
             else {
                 if (item.isEggFryItem) {
                     html += `<div class="opt-label">選擇煎蛋種類：</div>
@@ -464,7 +453,6 @@
                 html += `</div><div class="item-footer"><span class="item-price">$${item.price}</span>`;
             }
             
-            // ✨ 改造核心：在此段尾端注入數量框，並與加入按鈕完美合併排版
             html += `
                 <div class="action-container">
                     <input type="number" id="qty-${item.id}" value="1" min="1" max="99" class="item-qty-input">
@@ -533,19 +521,16 @@
             return null;
         }
 
-        // ✨ 升級版購物車打包器：全面支援自訂多個數量
         function addToCart(id, name) {
             let item = findItemById(id);
             let fullName = name;
             let finalPrice = 0;
 
-            // 抓出顧客輸入的商品數量數字
             const qtyInput = document.getElementById(`qty-${id}`);
             const userQty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
 
             let catGroup = menuData.find(cat => cat.items.some(i => i.id === id));
 
-            // A. 主食系列
             if (catGroup.isMainItem) {
                 const typeS = document.getElementById(`type-${id}`).querySelector('.opt-btn.selected').innerText;
                 const eggS = document.getElementById(`egg-${id}`).querySelector('.opt-btn.selected').innerText;
@@ -557,7 +542,6 @@
                 }
                 finalPrice = item.prices[`${typeS}_${eggS}`];
             } 
-            // B. 蛋餅/抓餅系列
             else if (catGroup.isEggCakeSection) {
                 const specS = document.getElementById(`spec-${id}`).querySelector('.opt-btn.selected').innerText;
                 if (specS === '抓餅') {
@@ -568,7 +552,6 @@
                 }
                 finalPrice = item.prices[specS];
             } 
-            // C. 特調飲品系列
             else if (catGroup.isDrinkSection && item.prices) {
                 const sizeS = document.getElementById(`size-${id}`).querySelector('.opt-btn.selected').innerText;
                 const tempS = document.getElementById(`temp-select-${id}`).value;
@@ -577,7 +560,6 @@
                 fullName = `${name}-${sizeS}(${tempS}/${sugarS})`;
                 finalPrice = item.prices[sizeS];
             } 
-            // D. 鐵板麵食系列
             else if (catGroup.isNoodleSection) {
                 const specS = document.getElementById(`spec-${id}`).querySelector('.opt-btn.selected').innerText;
                 if (specS === '升級套餐') {
@@ -593,7 +575,6 @@
                 }
                 finalPrice = item.prices[specS];
             } 
-            // E. 其他單點或果醬系列
             else if (item.prices) {
                 const specS = document.getElementById(`spec-${id}`).querySelector('.opt-btn.selected').innerText;
                 fullName = `${name}(${specS})`;
@@ -608,7 +589,6 @@
                 }
             }
 
-            // 累加數量處理
             const existing = cart.find(c => c.fullName === fullName);
             if (existing) { 
                 existing.qty += userQty; 
@@ -616,7 +596,6 @@
                 cart.push({ fullName: fullName, price: finalPrice, qty: userQty }); 
             }
             
-            // 清空主食備註欄、且貼心地將對應的品項數量框重置回 1
             if (catGroup.isMainItem) { document.getElementById(`note-${id}`).value = ''; }
             if (qtyInput) { qtyInput.value = 1; }
             
@@ -646,7 +625,7 @@
 
         function removeFromCart(index) { cart.splice(index, 1); renderCart(); }
 
-        // ✨ 升級版：確認送出訂單到 Firebase 成功後，自動呼叫手機簡訊通知功能
+        // 🌟 修正後的送出訂單邏輯：僅寫入資料庫，徹底移除了手機簡訊跳轉功能
         function submitOrder() {
             if(cart.length === 0) { alert('您的購物車是空的！'); return; }
             const phone = document.getElementById('user-phone').value.trim();
@@ -677,22 +656,8 @@
 
             database.ref('orders').push(newOrder)
             .then(() => {
-                alert(`🎉 訂單 #${currentId} 已成功傳送到雲端資料庫！\n\n按下「確定」後，會為您彈出手機簡訊 App，請直接點擊發送通知老闆娘查閱唷！`);
+                alert(`🎉 訂單 #${currentId} 已成功傳送到雲端資料庫！`);
                 localStorage.setItem('jlh_order_id_counter', currentId + 1);
-
-                // ========================================================
-                // 💬【自動發送簡訊核心代碼】完美相容 iOS 與 Android
-                // ========================================================
-                const bossPhone = "0963726958";
-                const displayUser = document.getElementById('table-num').value.trim() || '有客人';
-                const smsMessage = `您好！${displayUser} 已在網頁下單（訂單#${currentId}，總額$${total}），請您查閱後台訂單系統，謝謝！`;
-
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                const smsUrl = `sms:${bossPhone}${isIOS ? '&' : '?'}body=${encodeURIComponent(smsMessage)}`;
-
-                // 喚起手機內建簡訊系統
-                window.location.href = smsUrl;
-                // ========================================================
 
                 // 重置清空表單與購物車
                 cart = [];
