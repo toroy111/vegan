@@ -62,7 +62,9 @@
         
         /* 購物車區塊 */
         .cart-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; }
-        .cart-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #edf2f7; font-size: 14px; align-items: center; }
+        .cart-item { padding: 12px 0; border-bottom: 1px solid #edf2f7; font-size: 14px; }
+        .cart-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .cart-item-bottom { display: flex; justify-content: space-between; align-items: center; font-size: 12px; background: #f8f9fa; padding: 6px 8px; border-radius: 6px; }
         .cart-total { font-size: 22px; font-weight: bold; text-align: right; margin: 20px 0; color: #e53e3e; }
         .submit-order-btn { width: 100%; background: var(--secondary-color); color: white; border: none; padding: 14px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(39,174,96,0.2); }
         
@@ -70,12 +72,17 @@
         .flex-inputs { display: flex; gap: 8px; margin-bottom: 4px; }
         label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 5px; color: #4a5568; }
 
-        /* 右下角浮動快捷鍵 */
-        .float-buttons { position: fixed; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
-        .float-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background-color: rgba(44, 62, 80, 0.85); color: white; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: 0.3s; }
+        /* 🌟 右下角浮動快捷鍵 */
+        .float-buttons { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+        .float-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background-color: rgba(44, 62, 80, 0.85); color: white; font-size: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: 0.3s; }
         .float-btn:hover { background-color: var(--primary-color); transform: scale(1.05); }
         .float-cart-btn { background-color: rgba(230, 126, 34, 0.9); }
         .float-cart-btn:hover { background-color: #d35400; }
+
+        @media (max-width: 768px) {
+            .float-buttons { bottom: 15px; right: 15px; gap: 8px; }
+            .float-btn { width: calc(40px + 2vw); height: calc(40px + 2vw); font-size: calc(16px + 1vw); }
+        }
 
         /* 🌟 收據明細彈窗樣式 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
@@ -129,20 +136,30 @@
                         </div>
                     </div>
 
-                    <!-- 🌟 這包外帶專屬欄位會透過切換自動隱藏或顯示 -->
+                    <!-- 外帶專屬欄位 -->
                     <div id="takeout-fields">
                         <label>📞 聯絡電話 (必填)：</label>
                         <input type="tel" id="user-phone" placeholder="填寫聯絡手機" class="input-field">
 
                         <label>💬 LINE ID (選填)：</label>
                         <input type="text" id="user-line" placeholder="方便聯絡通知" class="input-field">
+
+                        <!-- 外帶分裝需求 -->
+                        <label>🛍️ 外帶分裝需求：</label>
+                        <select id="bag-split-option" class="input-field" onchange="onBagOptionChange()">
+                            <option value="不指定/裝一袋">不指定 / 裝成一袋</option>
+                            <option value="分成兩袋裝">分裝成 2 個袋子 (A/B)</option>
+                            <option value="分成三袋裝">分裝成 3 個袋子 (A/B/C)</option>
+                            <option value="飲料與餐點分開裝">飲料與餐點分開裝 (A/B)</option>
+                            <option value="各別獨立裝一袋">各別獨立裝一袋</option>
+                        </select>
                     </div>
                     
                     <label>✍️ 訂單備註：</label>
                     <textarea id="order-note" class="input-field" placeholder="如有其他特殊客製要求請寫在這邊" style="height: 55px; resize: none;"></textarea>
                 </div>
                 <hr style="border: none; border-top: 1px solid #edf2f7;">
-                <div id="cart-items-list" style="margin-top: 15px; max-height: 250px; overflow-y: auto;">
+                <div id="cart-items-list" style="margin-top: 15px; max-height: 280px; overflow-y: auto;">
                     <p style="color: #a0aec0; text-align: center; padding: 20px 0;">購物車目前空空如也</p>
                 </div>
                 <div class="cart-total">總金額: $<span id="cart-total-price">0</span></div>
@@ -156,7 +173,7 @@
         <div style="display: flex; flex-direction: column; align-items: center;">
             <div id="printable-receipt" class="receipt-card">
                 <div class="receipt-header">
-                    <h2>珍愛家蔬食早午餐</h2>
+                    <h2>珍愛家素食早午餐</h2>
                     <p>#<span id="rec-order-id">1001</span> 點餐明細憑證</p>
                     <div style="font-size: 11px; color: #555; margin-top: 2px;" id="rec-print-time">2026-09-19 09:15</div>
                 </div>
@@ -164,6 +181,7 @@
                     <div><b>取餐日期：</b><span id="rec-date">2026-09-19</span></div>
                     <div><b>用餐方式：</b><span id="rec-dining-type">外帶</span></div>
                     <div><b>聯絡資訊：</b><span id="rec-phone">0912345678</span></div>
+                    <div><b>分裝需求：</b><span id="rec-bag">不指定/裝一袋</span></div>
                     <div><b>備註說明：</b><span id="rec-note">無</span></div>
                 </div>
                 <hr class="receipt-divider">
@@ -173,7 +191,7 @@
                     合計金額：$<span id="rec-total-price">0</span>元
                 </div>
                 <div class="receipt-footer">
-                    感謝您的光臨！祝您有個美好的一天 ✨<br>珍愛家蔬食早午餐 敬上
+                    感謝您的光臨！祝您有個美好的一天 ✨<br>珍愛家素食早午餐 敬上
                 </div>
             </div>
 
@@ -337,7 +355,7 @@
 
         let cart = [];
 
-        // 🌟 切換內用/外帶時顯示與隱藏欄位
+        // 切換內用/外帶時顯示與隱藏欄位
         function toggleDiningMode() {
             const dtype = document.getElementById('dining-type').value;
             const takeoutFields = document.getElementById('takeout-fields');
@@ -345,6 +363,29 @@
                 takeoutFields.style.display = 'none';
             } else {
                 takeoutFields.style.display = 'block';
+            }
+            renderCart();
+        }
+
+        // 當分裝選項變更時，重新整理購物車內的袋子選項
+        function onBagOptionChange() {
+            renderCart();
+        }
+
+        // 取得可用的袋子選項清單
+        function getAvailableBags() {
+            const dtype = document.getElementById('dining-type').value;
+            if (dtype === '內用') return ['內用'];
+            
+            const bagOpt = document.getElementById('bag-split-option').value;
+            if (bagOpt === '分成兩袋裝' || bagOpt === '飲料與餐點分開裝') {
+                return ['A袋', 'B袋'];
+            } else if (bagOpt === '分成三袋裝') {
+                return ['A袋', 'B袋', 'C袋'];
+            } else if (bagOpt === '各別獨立裝一袋') {
+                return ['獨立袋'];
+            } else {
+                return ['一袋裝'];
             }
         }
 
@@ -652,17 +693,25 @@
                 }
             }
 
-            const existing = cart.find(c => c.fullName === fullName);
+            const availableBags = getAvailableBags();
+            const defaultBag = availableBags[0] || '一袋裝';
+
+            const existing = cart.find(c => c.fullName === fullName && c.bag === defaultBag);
             if (existing) { 
                 existing.qty += userQty; 
             } else { 
-                cart.push({ fullName: fullName, price: finalPrice, qty: userQty }); 
+                cart.push({ fullName: fullName, price: finalPrice, qty: userQty, bag: defaultBag }); 
             }
             
             if (catGroup.isMainItem) { document.getElementById(`note-${id}`).value = ''; }
             if (qtyInput) { qtyInput.value = 1; }
             
             renderCart();
+        }
+
+        // 更新購物車內特定項目的所屬袋子
+        function updateItemBag(index, selectElem) {
+            cart[index].bag = selectElem.value;
         }
 
         function renderCart() {
@@ -673,13 +722,31 @@
                 totalSpan.innerText = '0';
                 return;
             }
+
+            const availableBags = getAvailableBags();
             let cartHtml = '';
             let total = 0;
+
             cart.forEach((item, index) => {
                 total += (item.price * item.qty);
+                
+                // 動態生成袋子下拉選單
+                let bagOptionsHtml = '';
+                availableBags.forEach(b => {
+                    bagOptionsHtml += `<option value="${b}" ${item.bag === b ? 'selected' : ''}>${b}</option>`;
+                });
+
                 cartHtml += `<div class="cart-item">
-                    <span style="font-weight:500;">${item.fullName} <b>x ${item.qty}</b></span>
-                    <span>$${item.price * item.qty} <button style="color:#e53e3e; border:none; background:none; cursor:pointer; margin-left:8px; font-size:14px;" onclick="removeFromCart(${index})">❌</button></span>
+                    <div class="cart-item-top">
+                        <span style="font-weight:600;">${item.fullName} <b>x ${item.qty}</b></span>
+                        <span>$${item.price * item.qty} <button style="color:#e53e3e; border:none; background:none; cursor:pointer; margin-left:6px; font-size:14px;" onclick="removeFromCart(${index})" title="移除">❌</button></span>
+                    </div>
+                    <div class="cart-item-bottom">
+                        <span>🛍️ 裝入袋子：</span>
+                        <select class="opt-select" style="width: 120px; padding: 3px 6px; margin: 0;" onchange="updateItemBag(${index}, this)">
+                            ${bagOptionsHtml}
+                        </select>
+                    </div>
                 </div>`;
             });
             list.innerHTML = cartHtml;
@@ -694,13 +761,15 @@
             const dtype = document.getElementById('dining-type').value;
             const phoneInput = document.getElementById('user-phone');
             
-            // 如果是外帶，聯絡電話必填
             let phone = '內用無電話';
             let lineId = '內用無LINE';
+            let bagOption = '內用無分裝需求';
+
             if (dtype === '外帶') {
                 phone = phoneInput.value.trim();
                 if(!phone) { alert('外帶訂單請務必填寫聯絡電話！'); return; }
                 lineId = document.getElementById('user-line').value.trim() || '未填寫';
+                bagOption = document.getElementById('bag-split-option').value;
             }
 
             const oDate = document.getElementById('order-date').value;
@@ -709,7 +778,9 @@
             const total = parseInt(document.getElementById('cart-total-price').innerText);
             
             let currentId = parseInt(localStorage.getItem('jlh_order_id_counter')) || 1001;
-            const itemsString = cart.map(c => `${c.fullName} x${c.qty}`).join(', ');
+            
+            // 組合包含袋子分配資訊的品項字串
+            const itemsString = cart.map(c => `[${c.bag}] ${c.fullName} x${c.qty}`).join(', ');
 
             const newOrder = {
                 id: currentId,
@@ -718,6 +789,7 @@
                 type: `${dtype} (${tnum})`,
                 phone: phone,
                 line: lineId,
+                bag: bagOption,
                 items: itemsString, 
                 note: note,
                 total: total,
@@ -734,13 +806,14 @@
                 document.getElementById('rec-date').innerText = oDate;
                 document.getElementById('rec-dining-type').innerText = `${dtype} (${tnum})`;
                 document.getElementById('rec-phone').innerText = dtype === '外帶' ? phone : `桌號/姓名: ${tnum}`;
+                document.getElementById('rec-bag').innerText = bagOption;
                 document.getElementById('rec-note').innerText = note;
                 document.getElementById('rec-total-price').innerText = total;
 
                 let recItemsHtml = '';
                 cart.forEach(item => {
                     recItemsHtml += `<div class="receipt-item-row">
-                        <span>${item.qty}x ${item.fullName}</span>
+                        <span>[${item.bag}] ${item.qty}x ${item.fullName}</span>
                         <span>$${item.price * item.qty}</span>
                     </div>`;
                 });
@@ -783,7 +856,7 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('order-date').value = today;
             initMenu();
-            toggleDiningMode(); // 初始化檢查一次狀態
+            toggleDiningMode(); 
         };
     </script>
 </body>
