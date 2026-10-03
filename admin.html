@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>珍愛家蔬食早午餐 - 後台接單系統</title>
+    <title>珍愛家蔬食早午餐 - 後台管理與接單系統</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary-color: #2c3e50; --accent-color: #e67e22; --success-color: #27ae60; --bg-color: #ecf0f1; }
@@ -14,9 +14,17 @@
         
         header { background: var(--primary-color); color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         
+        /* 🌟 分頁頁籤導覽列樣式 */
+        .admin-nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: #bdc3c7; color: #2c3e50; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .tab-btn.active { background: var(--accent-color); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+
+        .tab-content-panel { display: none; }
+        .tab-content-panel.active { display: block; }
+
         .dashboard { display: grid; grid-template-columns: 1fr; gap: 20px; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { margin-bottom: 15px; font-size: 18px; border-left: 4px solid var(--accent-color); padding-left: 10px; }
+        h2 { margin-bottom: 15px; font-size: 18px; border-left: 4px solid var(--accent-color); padding-left: 10px; display: flex; justify-content: space-between; align-items: center; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; }
         th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; word-wrap: break-word; }
@@ -66,6 +74,22 @@
         
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
+        /* 🌟 菜單後台專屬樣式 */
+        .menu-manage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .btn-primary-custom { background-color: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn-primary-custom:hover { background-color: #2980b9; }
+        .btn-danger-custom { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .btn-warning-custom { background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; margin-right: 5px; }
+
+        /* 彈窗樣式 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-card { background: white; width: 500px; max-width: 90%; padding: 25px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #4a5568; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; }
+        .form-control:focus { border-color: var(--accent-color); }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
         /* 登入介面遮罩 */
         #login-screen-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -77,7 +101,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center;
         }
         .login-card h2 {
-            font-size: 26px; font-weight: bold; color: #333333; margin-bottom: 30px; border: none; padding-left: 0;
+            font-size: 26px; font-weight: bold; color: #333333; margin-bottom: 30px; border: none; padding-left: 0; justify-content: center;
         }
         .input-group {
             position: relative; margin-bottom: 18px; text-align: left;
@@ -145,8 +169,8 @@
     <div id="main-admin-content">
         <header>
             <div>
-                <h1 style="font-size: 22px;">🍳 珍愛家蔬食早午餐 - 即時接單後台 🔔</h1>
-                <p style="font-size: 12px; opacity: 0.8; margin-top: 3px;">系統已成功連線 Firebase：新訂單免重新整理即時跳出、全自動播放鈴聲</p>
+                <h1 style="font-size: 22px;">🍳 珍愛家素食早午餐 - 後台管理與接單系統 🔔</h1>
+                <p style="font-size: 12px; opacity: 0.8; margin-top: 3px;">系統已成功連線 Firebase：新訂單即時通知、支援後台動態修改前台菜單與價格</p>
             </div>
             <div style="display: flex; align-items: center;">
                 <select id="audio-sound-type" class="audio-select" onchange="playDingDong()">
@@ -156,31 +180,98 @@
                     <option value="alert">🚨 音效：緊急快節奏警報</option>
                 </select>
                 <button class="audio-btn" onclick="playDingDong()">測試</button>
-                <button class="clear-btn" style="margin-left: 15px;" onclick="clearAllOrders()">🧹 清空歷史</button>
+                <button class="clear-btn" style="margin-left: 15px;" onclick="clearAllOrders()">🧹 清空歷史訂單</button>
                 <button class="logout-btn" onclick="logoutAdminSystem()">🚪 登出後台</button>
             </div>
         </header>
 
-        <div class="dashboard">
+        <!-- 🌟 後台切換頁籤 -->
+        <div class="admin-nav-tabs">
+            <button class="tab-btn active" onclick="switchAdminTab('orders', this)"><i class="fa-solid fa-receipt"></i> 即時接單管理</button>
+            <button class="tab-btn" onclick="switchAdminTab('menu', this)"><i class="fa-solid fa-utensils"></i> 前台菜單與類別管理</button>
+        </div>
+
+        <!-- 🌟 頁籤 1：即時接單管理 -->
+        <div id="tab-orders" class="tab-content-panel active">
+            <div class="dashboard">
+                <div class="card">
+                    <h2>📥 當日點餐訂單列表 (最新訂單排在最上方)</h2>
+                    <table id="orders-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 7%;">單號</th>
+                                <th style="width: 14%;">取餐時間/方式</th>
+                                <th style="width: 13%;">聯絡電話 / LINE</th>
+                                <th style="width: 45%;">點餐品項明細 (依類別自動歸類)</th>
+                                <th style="width: 11%;">全單大備註</th>
+                                <th style="width: 8%;">總金額</th>
+                                <th style="width: 8%;">目前狀態</th>
+                                <th style="width: 9%;">出餐操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-tbody">
+                            <tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">連線中，請稍候...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🌟 頁籤 2：前台菜單與價格管理 -->
+        <div id="tab-menu" class="tab-content-panel">
             <div class="card">
-                <h2>📥 當日點餐訂單列表 (最新訂單排在最上方)</h2>
-                <table id="orders-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 7%;">單號</th>
-                            <th style="width: 14%;">取餐時間/方式</th>
-                            <th style="width: 13%;">聯絡電話 / LINE</th>
-                            <th style="width: 45%;">點餐品項明細 (依類別自動歸類)</th>
-                            <th style="width: 11%;">全單大備註</th>
-                            <th style="width: 8%;">總金額</th>
-                            <th style="width: 8%;">目前狀態</th>
-                            <th style="width: 9%;">出餐操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orders-tbody">
-                        <tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">連線中，請稍候...</td></tr>
-                    </tbody>
-                </table>
+                <div class="menu-manage-header">
+                    <h2>📖 編輯前台類別、菜單品項與價格</h2>
+                    <div>
+                        <button class="btn-primary-custom" onclick="openAddCategoryModal()"><i class="fa-solid fa-folder-plus"></i> 新增分類</button>
+                        <button class="btn-primary-custom" onclick="openAddItemModal()" style="background-color:#27ae60;"><i class="fa-solid fa-plus"></i> 新增菜單品項</button>
+                        <button class="btn-primary-custom" onclick="resetMenuToDefault()" style="background-color:#e74c3c;"><i class="fa-solid fa-rotate-left"></i> 回復預設菜單</button>
+                    </div>
+                </div>
+                <div id="admin-menu-container">
+                    <p style="text-align:center; color:#aaa; padding:20px;">載入菜單中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🌟 新增/編輯品項彈窗 -->
+    <div id="item-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 id="modal-title" style="margin-bottom: 15px; color: var(--primary-color);">新增 / 編輯菜單品項</h3>
+            <input type="hidden" id="edit-item-cat-index">
+            <input type="hidden" id="edit-item-index">
+            
+            <div class="form-group">
+                <label>選擇所屬分類：</label>
+                <select id="item-modal-category" class="form-control">
+                    <!-- 動態載入分類 -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>品項名稱：</label>
+                <input type="text" id="item-modal-name" class="form-control" placeholder="例如：招牌漢堡">
+            </div>
+            <div class="form-group">
+                <label>價格設定模式說明：</label>
+                <p style="font-size: 12px; color: #666; background: #f8f9fa; padding: 8px; border-radius: 4px; line-height: 1.4;">
+                    • <b>單一價格品項</b>（如小吃、濃湯）：請在下方直接填寫固定價格。<br>
+                    • <b>多規格/多價格品項</b>（如吐司、蛋餅、飲料）：請以 JSON 格式填寫價格，例如：<br>
+                    <code>{"薄片": 20, "厚片": 25}</code> 或 <code>{"小杯400cc": 15, "大杯700cc": 30}</code>
+                </p>
+            </div>
+            <div class="form-group" id="group-single-price">
+                <label>固定價格 ($)：</label>
+                <input type="number" id="item-modal-price" class="form-control" value="30">
+            </div>
+            <div class="form-group" id="group-prices-json" style="display:none;">
+                <label>多規格價格 (JSON 格式)：</label>
+                <textarea id="item-modal-prices-json" class="form-control" style="height: 80px;" placeholder='{"規格一": 30, "規格二": 45}'></textarea>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn-primary-custom" style="background-color: #95a5a6;" onclick="closeItemModal()">取消</button>
+                <button class="btn-primary-custom" onclick="saveItemData()">儲存品項</button>
             </div>
         </div>
     </div>
@@ -192,21 +283,149 @@
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBzJK2WeArMThOCq9gB2g6NnAUJHFYlqhw",
-  authDomain: "toroy111-3219c.firebaseapp.com",
-  databaseURL: "https://toroy111-3219c-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "toroy111-3219c",
-  storageBucket: "toroy111-3219c.firebasestorage.app",
-  messagingSenderId: "20328468755",
-  appId: "1:20328468755:web:18d77d0ec4e9b15979cae6",
-  measurementId: "G-2FZRM3QKBN"
+            authDomain: "toroy111-3219c.firebaseapp.com",
+            databaseURL: "https://toroy111-3219c-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "toroy111-3219c",
+            storageBucket: "toroy111-3219c.firebasestorage.app",
+            messagingSenderId: "20328468755",
+            appId: "1:20328468755:web:18d77d0ec4e9b15979cae6",
+            measurementId: "G-2FZRM3QKBN"
         };
 
-        // 初始化 Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const database = firebase.database();
         let firebaseListenerRef = null; 
+
+        // 預設前台菜單資料結構
+        const defaultMenuData = [
+            {
+                category: "🥪 主食系列 (吐司 / 漢堡 / 潛艇堡)",
+                isMainItem: true,
+                items: [
+                    { id: "m_01", name: "煎蛋", types: ["白/全麥吐司", "漢堡", "潛艇堡"], prices: { "白/全麥吐司_無蛋": 30, "漢堡_無蛋": 30, "潛艇堡_無蛋": 40 } },
+                    { id: "m_02", name: "鮮蔬", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 40, "白/全麥吐司_無蛋": 25, "漢堡_加蛋": 40, "漢堡_無蛋": 25, "潛艇堡_加蛋": 50, "潛艇堡_無蛋": 35 } },
+                    { id: "m_03", name: "羅勒起士蛋", types: ["白/全麥吐司", "漢堡", "潛艇堡"], prices: { "白/全麥吐司_加蛋": 40, "漢堡_加蛋": 40, "潛艇堡_加蛋": 50 } },
+                    { id: "m_04", name: "起士鮮蔬", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 45, "白/全麥吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 55, "潛艇堡_無蛋": 40 } },
+                    { id: "m_05", name: "玉米", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 45, "白/全麥吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 45 } },
+                    { id: "m_06", name: "素肉鬆", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 45, "白/全麥吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 45 } },
+                    { id: "m_07", name: "火腿", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 45, "白/全麥吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 45 } },
+                    { id: "m_08", name: "培根", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 45, "白/全麥吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 45 } },
+                    { id: "m_09", name: "香椿野菇(全素)", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 50, "白/全麥吐司_無蛋": 35, "漢堡_加蛋": 50, "漢堡_無蛋": 35, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 50 } },
+                    { id: "m_10", name: "薯餅", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 50, "白/全麥吐司_無蛋": 35, "漢堡_加蛋": 50, "漢堡_無蛋": 35, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 50 } },
+                    { id: "m_11", name: "鮪魚沙拉", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 55, "白/全麥吐司_無蛋": 40, "漢堡_加蛋": 55, "漢堡_無蛋": 40, "潛艇堡_加蛋": 65, "潛艇堡_無蛋": 50 } },
+                    { id: "m_12", name: "香雞排", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 55, "白/全麥吐司_無蛋": 40, "漢堡_加蛋": 55, "漢堡_無蛋": 40, "潛艇堡_加蛋": 65, "潛艇堡_無蛋": 50 } },
+                    { id: "m_13", name: "花生薯餅(全素)", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 60, "白/全麥吐司_無蛋": 45, "漢堡_加蛋": 60, "漢堡_無蛋": 45, "潛艇堡_加蛋": 70, "潛艇堡_無蛋": 55 } },
+                    { id: "m_14", name: "熱狗", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 60, "白/全麥吐司_無蛋": 45, "漢堡_加蛋": 60, "漢堡_無蛋": 45, "潛艇堡_加蛋": 70, "潛艇堡_無蛋": 55 } },
+                    { id: "m_15", name: "黑胡椒豬排", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 65, "白/全麥吐司_無蛋": 50, "漢堡_加蛋": 65, "漢堡_無蛋": 50, "潛艇堡_加蛋": 75, "潛艇堡_無蛋": 60 } },
+                    { id: "m_16", name: "北海鱈魚", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 65, "白/全麥吐司_無蛋": 50, "漢堡_加蛋": 65, "漢堡_無蛋": 50, "潛艇堡_加蛋": 75, "潛艇堡_無蛋": 60 } },
+                    { id: "m_17", name: "香辣卡拉雞", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 65, "白/全麥吐司_無蛋": 50, "漢堡_加蛋": 65, "漢堡_無蛋": 50, "潛艇堡_加蛋": 75, "潛艇堡_無蛋": 60 } },
+                    { id: "m_18", name: "雙芥末花枝", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 70, "白/全麥吐司_無蛋": 55, "漢堡_加蛋": 70, "漢堡_無蛋": 55, "潛艇堡_加蛋": 80, "潛艇堡_無蛋": 65 } },
+                    { id: "m_19", name: "美式熱狗(全素)", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 70, "白/全麥吐司_無蛋": 55, "漢堡_加蛋": 70, "漢堡_無蛋": 55, "潛艇堡_加蛋": 80, "潛艇堡_無蛋": 65 } },
+                    { id: "m_20", name: "經典牛小排", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 75, "白/全麥吐司_無蛋": 60, "漢堡_加蛋": 75, "漢堡_無蛋": 60, "潛艇堡_加蛋": 85, "潛艇堡_無蛋": 70 } },
+                    { id: "m_21", name: "酸菜牛肉", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 75, "白/全麥吐司_無蛋": 60, "漢堡_加蛋": 75, "漢堡_無蛋": 60, "潛艇堡_加蛋": 85, "潛艇堡_無蛋": 70 } },
+                    { id: "m_22", name: "墨西哥辣雞(全素)", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 75, "白/全麥吐司_無蛋": 60, "漢堡_加蛋": 75, "漢堡_無蛋": 60, "潛艇堡_加蛋": 85, "潛艇堡_無蛋": 70 } },
+                    { id: "m_23", name: "超級總匯", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 75, "白/全麥吐司_無蛋": 60, "漢堡_加蛋": 75, "漢堡_無蛋": 60, "潛艇堡_加蛋": 85, "潛艇堡_無蛋": 70 } },
+                    { id: "m_24", name: "雙魚寶寶", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 80, "白/全麥吐司_無蛋": 65, "漢堡_加蛋": 80, "漢堡_無蛋": 65, "潛艇堡_加蛋": 90, "潛艇堡_無蛋": 75 } },
+                    { id: "m_25", name: "海陸雙拼", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 80, "白/全麥吐司_無蛋": 65, "漢堡_加蛋": 80, "漢堡_無蛋": 65, "潛艇堡_加蛋": 90, "潛艇堡_無蛋": 75 } },
+                    { id: "m_26", name: "泡菜卡拉", types: ["白/全麥吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白/全麥吐司_加蛋": 80, "白/全麥吐司_無蛋": 65, "漢堡_加蛋": 80, "漢堡_無蛋": 65, "潛艇堡_加蛋": 90, "潛艇堡_無蛋": 75 } }
+                ]
+            },
+            {
+                category: "🍳 酥脆蛋餅 / 抓餅系列 (抓餅皆為蛋餅價格+20元)",
+                isEggCakeSection: true,
+                items: [
+                    { id: "g_01", name: "原味", prices: { "蛋餅": 25, "抓餅": 45 } },
+                    { id: "g_02", name: "日式", prices: { "蛋餅": 35, "抓餅": 55 } },
+                    { id: "g_03", name: "九層塔", prices: { "蛋餅": 35, "抓餅": 55 } },
+                    { id: "g_04", name: "起士", prices: { "蛋餅": 35, "抓餅": 55 } },
+                    { id: "g_05", name: "素肉鬆", prices: { "蛋餅": 35, "抓餅": 55 } },
+                    { id: "g_06", name: "菜脯", prices: { "蛋餅": 35, "抓餅": 55 } },
+                    { id: "g_07", name: "菜脯九層塔", prices: { "蛋餅": 35, "抓餅": 55 } },
+                    { id: "g_08", name: "火腿", prices: { "蛋餅": 35, "抓餅": 55 } },
+                    { id: "g_09", name: "培根", prices: { "蛋餅": 35, "抓餅": 55 } },
+                    { id: "g_10", name: "玉米", prices: { "蛋餅": 40, "抓餅": 60 } },
+                    { id: "g_11", name: "鮮蔬", prices: { "蛋餅": 40, "抓餅": 60 } },
+                    { id: "g_12", name: "薯餅", prices: { "蛋餅": 40, "抓餅": 60 } },
+                    { id: "g_13", name: "熱狗", prices: { "蛋餅": 45, "抓餅": 65 } },
+                    { id: "g_14", name: "鮪魚沙拉", prices: { "蛋餅": 45, "抓餅": 65 } },
+                    { id: "g_15", name: "黑胡椒野菇", prices: { "蛋餅": 45, "抓餅": 65 } },
+                    { id: "g_16", name: "豬排", prices: { "蛋餅": 45, "抓餅": 65 } },
+                    { id: "g_17", name: "酸菜培根", prices: { "蛋餅": 45, "抓餅": 65 } },
+                    { id: "g_18", name: "卡拉雞", prices: { "蛋餅": 50, "抓餅": 70 } },
+                    { id: "g_19", name: "泡菜起士", prices: { "蛋餅": 50, "抓餅": 70 } },
+                    { id: "g_20", name: "超級總匯", prices: { "蛋餅": 60, "抓餅": 80 } }
+                ]
+            },
+            {
+                category: "🍟 美味小吃單點區",
+                items: [
+                    { id: "s_01", name: "薯餅(1片)", price: 20 },
+                    { id: "s_02", name: "薯條", price: 30 },
+                    { id: "s_03", name: "粗脆薯", price: 40 },
+                    { id: "s_04", name: "熱狗", price: 30 },
+                    { id: "s_05", name: "鹹酥雞(奶素)", price: 40 },
+                    { id: "s_06", name: "麥克雞塊", price: 25 },
+                    { id: "s_07", name: "辣雞米花", price: 40 },
+                    { id: "s_08", name: "花枝圈", price: 40 },
+                    { id: "s_09", name: "荷包蛋", typeOptions: ["全熟", "半熟"], price: 15 },
+                    { id: "s_10", name: "玉米煎蛋 / 九層塔煎蛋", isEggFryItem: true, price: 30 },
+                    { id: "s_11", name: "綜合蔬菜炒蛋", price: 35 },
+                    { id: "s_12", name: "薯餅蛋塔", price: 65 },
+                    { id: "s_13", name: "玉米薯餅蛋塔", price: 75 },
+                    { id: "s_14", name: "法式吐司", typeOptions: ["原味", "起士"], price: 40 },
+                    { id: "s_15", name: "蘿蔔糕", price: 30 },
+                    { id: "s_16", name: "蘿蔔糕炒蛋", price: 45 },
+                    { id: "s_17", name: "蘿蔔糕炒菜脯九層塔蛋", price: 55 },
+                    { id: "s_18", name: "蘿蔔糕炒蔬菜蛋", price: 55 },
+                    { id: "s_19", name: "時令蔬菜湯麵", price: 70 }
+                ]
+            },
+            {
+                category: "🍝 鐵板美味麵食",
+                isNoodleSection: true,
+                items: [
+                    { id: "n_01", name: "黑胡椒麵", prices: { "單點": 40, "加蛋": 55, "加菜": 55, "升級套餐": 80 } },
+                    { id: "n_02", name: "奶油白醬麵", prices: { "單點": 40, "加蛋": 55, "加菜": 55, "升級套餐": 80 } },
+                    { id: "n_03", name: "香菇肉燥麵", prices: { "單點": 45, "加蛋": 60, "加菜": 60, "升級套餐": 85 } },
+                    { id: "n_04", name: "香椿拌麵", prices: { "單點": 45, "加蛋": 60, "加菜": 60, "升級套餐": 85 } },
+                    { id: "n_05", name: "饕辣豆瓣麵", prices: { "單點": 45, "加蛋": 60, "加菜": 60, "升級套餐": 85 } },
+                    { id: "n_06", name: "茄汁酸菜麵", prices: { "單點": 50, "加蛋": 65, "加菜": 65, "升級套餐": 90 } },
+                    { id: "n_07", name: "鐵板拌麵", prices: { "單點": 55, "加蛋": 70, "加菜": 70, "升級套餐": 95 } },
+                    { id: "n_08", name: "泡菜炒麵", prices: { "單點": 80, "加蛋": 95, "加菜": 95, "升級套餐": 120 } }
+                ]
+            },
+            {
+                category: "🍯 甜蜜果醬吐司系列",
+                items: [
+                    { id: "j_01", name: "花生果醬吐司", prices: { "薄片": 20, "厚片": 25 } },
+                    { id: "j_02", name: "巧克力果醬吐司", prices: { "薄片": 20, "厚片": 25 } },
+                    { id: "j_03", name: "草莓果醬吐司", prices: { "薄片": 20, "厚片": 25 } },
+                    { id: "j_04", name: "椰香果醬吐司", prices: { "薄片": 20, "厚片": 25 } },
+                    { id: "j_05", name: "抹茶果醬吐司", prices: { "薄片": 20, "厚片": 25 } }
+                ]
+            },
+            {
+                category: "🥤 特調冷熱飲品 / 溫慢湯品",
+                isDrinkSection: true,
+                items: [
+                    { id: "d_01", name: "紅茶", prices: { "小杯400cc": 15, "中杯500cc": 20, "大杯700cc": 30 } },
+                    { id: "d_02", name: "奶茶", prices: { "小杯400cc": 15, "中杯500cc": 20, "大杯700cc": 30 } },
+                    { id: "d_03", name: "鮮奶茶", prices: { "小杯400cc": 25, "中杯500cc": 30, "大杯700cc": 40 } },
+                    { id: "d_04", name: "豆漿", hasNoSugar: true, prices: { "小杯400cc": 15, "清杯500cc": 20, "大杯700cc": 30 } },
+                    { id: "d_05", name: "柳丁汁", isJuice: true, prices: { "小杯400cc": 20, "中杯500cc": 25, "大杯700cc": 35 } },
+                    { id: "d_06", name: "豆漿紅茶", hasNoSugar: true, prices: { "小杯400cc": 20, "中杯500cc": 25, "大杯700cc": 35 } },
+                    { id: "d_07", name: "鴛鴦奶茶", prices: { "小杯400cc": 20, "中杯500cc": 30, "大杯700cc": 40 } },
+                    { id: "d_08", name: "咖啡", hasNoSugar: true, prices: { "小杯400cc": 20, "中杯500cc": 30, "大杯700cc": 40 } },
+                    { id: "d_09", name: "鮮奶咖啡", hasNoSugar: true, prices: { "小杯400cc": 30, "中杯500cc": 40, "大杯700cc": 50 } },
+                    { id: "d_10", name: "豆乳咖啡", hasNoSugar: true, prices: { "小杯400cc": 30, "中杯500cc": 40, "大杯700cc": 50 } },
+                    { id: "d_11", name: "鮮蜜豆奶", hasNoSugar: true, prices: { "小杯400cc": 30, "中杯500cc": 40, "大杯700cc": 50 } },
+                    { id: "d_12", name: "奶油濃湯", isSoup: true, price: 35 },
+                    { id: "d_13", name: "蔬菜湯", isSoup: true, price: 35 }
+                ]
+            }
+        ];
 
         // 👁️ 密碼眼睛隱私切換功能
         function togglePasswordVisibility() {
@@ -221,7 +440,7 @@
             }
         }
 
-        // 🔐 登入驗證功能 (帳號：admin / 密碼：love11)
+        // 🔐 登入驗證功能
         function executeLoginValidation() {
             const username = document.getElementById('user-name-input').value.trim();
             const password = document.getElementById('user-pass-input').value;
@@ -229,14 +448,12 @@
             
             if (username === "admin" && password === "love11") {
                 errorHint.style.display = "none";
-                
                 document.getElementById('login-screen-overlay').style.display = "none";
                 document.getElementById('main-admin-content').style.display = "block";
-                
                 sessionStorage.setItem('je_admin_login_token', 'success_authenticated');
                 
-                // 正式啟動 Firebase 接單監聽
                 listenToFirebaseOrders();
+                loadAdminMenuData();
             } else {
                 errorHint.style.display = "block";
                 document.getElementById('user-pass-input').value = "";
@@ -256,6 +473,19 @@
                 document.getElementById('user-pass-input').value = "";
                 document.getElementById('main-admin-content').style.display = "none";
                 document.getElementById('login-screen-overlay').style.display = "flex";
+            }
+        }
+
+        // 📑 切換後台分頁
+        function switchAdminTab(tabName, btnElem) {
+            document.querySelectorAll('.tab-content-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            btnElem.classList.add('active');
+            
+            if (tabName === 'menu') {
+                loadAdminMenuData();
             }
         }
 
@@ -378,43 +608,38 @@
                 renderAdminTable(ordersArray); 
             }, (error) => {
                 console.error("後台讀取 Firebase 失敗:", error);
-                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#e74c3c; padding:30px;">❌ 資料庫連線或讀取失敗，請確認網路與權限設定</td></tr>`;
+                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#e74c3c; padding:30px;">❌ 資料庫連線或讀取失敗</td></tr>`;
             });
         }
 
         function formatItemsToCategorizedHtml(itemsString) {
             if (!itemsString) return '無明細';
-            
             const itemsArray = itemsString.split(', ');
             const categories = {
-                main: { title: "🥪 主食系列 (吐司/漢堡/潛艇堡)", class: "cat-main", html: "" },
+                main: { title: "🥪 主食系列", class: "cat-main", html: "" },
                 egg: { title: "🍳 蛋餅 / 抓餅系列", class: "cat-egg", html: "" },
-                noodle: { title: "🍝 鐵板美味麵食", class: "cat-noodle", html: "" },
-                drink: { title: "🥤 特調飲品 / 湯品", class: "cat-drink", html: "" },
-                toast: { title: "🍯 果醬吐司系列", class: "cat-toast", html: "" },
-                snack: { title: "🍟 美味小吃單點", class: "cat-snack", html: "" }
+                noodle: { title: "🍝 麵食系列", class: "cat-noodle", html: "" },
+                drink: { title: "🥤 飲品 / 湯品", class: "cat-drink", html: "" },
+                toast: { title: "🍯 果醬吐司", class: "cat-toast", html: "" },
+                snack: { title: "🍟 小吃點心", class: "cat-snack", html: "" }
             };
 
             itemsArray.forEach(item => {
                 let currentItemText = item.trim();
                 if(!currentItemText) return;
-
                 let originText = currentItemText;
-
                 let qtyText = '';
                 const qtyMatch = currentItemText.match(/\s+x\d+$/);
                 if (qtyMatch) {
                     qtyText = `<span style="color:#e67e22; font-weight:bold; font-size:14px; margin-left:4px;">${qtyMatch[0].trim()}</span>`;
                     currentItemText = currentItemText.replace(/\s+x\d+$/, '');
                 }
-
                 let customBadgeHtml = '';
                 const noteMatch = currentItemText.match(/\[備註:\s*([^\]]+)\]/);
                 if (noteMatch) {
                     customBadgeHtml = `<span class="custom-badge">✍️ ${noteMatch[1]}</span>`;
                     currentItemText = currentItemText.replace(/\[備註:\s*[^\]]+\]/, '');
                 }
-
                 let specBadgeHtml = '';
                 const specMatch = currentItemText.match(/\(([^)]+)\)/);
                 if (specMatch) {
@@ -427,21 +652,11 @@
                     currentItemText = currentItemText.replace(/\([^)]+\)/, '');
                 }
 
-                let rowHtml = `
-                    <div class="food-row">
-                        <span class="food-title">${currentItemText.trim()}</span>
-                        ${qtyText}
-                        ${specBadgeHtml}
-                        ${customBadgeHtml}
-                    </div>
-                `;
+                let rowHtml = `<div class="food-row"><span class="food-title">${currentItemText.trim()}</span>${qtyText}${specBadgeHtml}${customBadgeHtml}</div>`;
 
                 if (originText.includes("吐司") || originText.includes("漢堡") || originText.includes("潛艇堡")) {
-                    if (originText.includes("果醬吐司")) {
-                        categories.toast.html += rowHtml;
-                    } else {
-                        categories.main.html += rowHtml;
-                    }
+                    if (originText.includes("果醬吐司")) { categories.toast.html += rowHtml; } 
+                    else { categories.main.html += rowHtml; }
                 } else if (originText.includes("蛋餅") || originText.includes("抓餅")) {
                     categories.egg.html += rowHtml;
                 } else if (originText.includes("麵") || originText.includes("套餐")) {
@@ -457,53 +672,29 @@
             Object.keys(categories).forEach(key => {
                 const cat = categories[key];
                 if (cat.html !== "") {
-                    finalHtml += `
-                        <div class="category-block ${cat.class}">
-                            <div class="category-title">${cat.title}</div>
-                            ${cat.html}
-                        </div>
-                    `;
+                    finalHtml += `<div class="category-block ${cat.class}"><div class="category-title">${cat.title}</div>${cat.html}</div>`;
                 }
             });
-
             return finalHtml || '無明細';
         }
 
         function renderAdminTable(orders) {
             const tbody = document.getElementById('orders-tbody');
             let html = '';
-
             orders.forEach(order => {
                 let statusClass = 'status-new';
                 let actionButtonHtml = `<button class="action-btn" onclick="updateOrderStatus('${order.firebaseKey}', '已出餐')">完成出餐 ✔</button>`;
-                
                 if (order.status === '已出餐' || order.status === '已完成') {
                     statusClass = 'status-done';
                     actionButtonHtml = `<span style="color:#27ae60; font-size:13px; font-weight:bold;">★ 已完畢</span>`;
                 }
-
-                let displayDate = order.date || '';
-                let displayTime = order.time || '';
-
-                let noteHtml = `<div class="note-empty">無備註</div>`;
-                if (order.note && order.note !== '無') {
-                    noteHtml = `<div class="note-text">📢 ${order.note}</div>`;
-                }
-
-                let categorizedItemsHtml = formatItemsToCategorizedHtml(order.items);
-
+                let noteHtml = (order.note && order.note !== '無') ? `<div class="note-text">📢 ${order.note}</div>` : `<div class="note-empty">無備註</div>`;
                 html += `
                     <tr>
                         <td style="font-weight:bold; color:var(--accent-color);">#${order.id || '---'}</td>
-                        <td>
-                            <div style="font-weight:600; font-size:14px;">${order.type || '未填'}</div>
-                            <div style="font-size:11px; color:#888; margin-top:2px;">下單: ${displayDate} ${displayTime}</div>
-                        </td>
-                        <td>
-                            <div style="font-size:13px;">📞 ${order.phone || '無'}</div>
-                            <div style="font-size:12px; color:#10b981; margin-top:2px;">LINE: ${order.line || '無'}</div>
-                        </td>
-                        <td><div class="item-list-text">${categorizedItemsHtml}</div></td>
+                        <td><div style="font-weight:600; font-size:14px;">${order.type || '未填'}</div><div style="font-size:11px; color:#888;">下單: ${order.date} ${order.time}</div></td>
+                        <td><div style="font-size:13px;">📞 ${order.phone || '無'}</div><div style="font-size:12px; color:#10b981;">LINE: ${order.line || '無'}</div></td>
+                        <td><div class="item-list-text">${formatItemsToCategorizedHtml(order.items)}</div></td>
                         <td>${noteHtml}</td>
                         <td style="font-weight:bold; color:#d63031; font-size:16px;">$${order.total || 0}</td>
                         <td><span class="status-badge ${statusClass}">${order.status || '新訂單'}</span></td>
@@ -511,27 +702,225 @@
                     </tr>
                 `;
             });
-
             tbody.innerHTML = html;
         }
 
         function updateOrderStatus(firebaseKey, newStatus) {
-            database.ref(`orders/${firebaseKey}`).update({
-                status: newStatus
-            })
-            .catch(err => {
-                alert('更改狀態失敗: ' + err.message);
-            });
+            database.ref(`orders/${firebaseKey}`).update({ status: newStatus }).catch(err => alert('更改狀態失敗: ' + err.message));
         }
 
         function clearAllOrders() {
-            if (confirm('⚠️ 確定要徹底清空雲端資料庫內的所有訂單紀錄嗎？\n此動作將無法復原！')) {
-                database.ref('orders').remove()
-                .then(() => {
-                    alert('🧹 雲端資料庫已全數清空完畢！');
-                })
-                .catch(err => {
-                    alert('清空失敗: ' + err.message);
+            if (confirm('⚠️ 確定要清空雲端資料庫內的所有訂單紀錄嗎？')) {
+                database.ref('orders').remove().then(() => alert('🧹 訂單已清空！')).catch(err => alert('清空失敗: ' + err.message));
+            }
+        }
+
+        // 🌟 菜單與類別管理邏輯
+        function loadAdminMenuData() {
+            database.ref('menuData').once('value').then(snapshot => {
+                let menu = snapshot.val();
+                if (!menu) {
+                    menu = defaultMenuData;
+                    database.ref('menuData').set(defaultMenuData);
+                }
+                renderAdminMenuUI(menu);
+            });
+        }
+
+        function renderAdminMenuUI(menu) {
+            const container = document.getElementById('admin-menu-container');
+            const categorySelect = document.getElementById('item-modal-category');
+            
+            container.innerHTML = '';
+            categorySelect.innerHTML = '';
+
+            menu.forEach((cat, catIndex) => {
+                // 填入彈窗的分類下拉選單
+                categorySelect.innerHTML += `<option value="${catIndex}">${cat.category}</option>`;
+
+                let itemsHtml = '';
+                if (cat.items && cat.items.length > 0) {
+                    cat.items.forEach((item, itemIndex) => {
+                        let priceDisplay = '';
+                        if (item.price !== undefined) {
+                            priceDisplay = `$${item.price}`;
+                        } else if (item.prices) {
+                            priceDisplay = Object.entries(item.prices).map(([k, v]) => `${k}: $${v}`).join(' / ');
+                        }
+
+                        itemsHtml += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px dashed #eee;">
+                                <div>
+                                    <b style="color:#2c3e50;">${item.name}</b> 
+                                    <span style="color:#e74c3c; font-size:13px; margin-left:10px;">${priceDisplay}</span>
+                                </div>
+                                <div>
+                                    <button class="btn-warning-custom" onclick="openEditItemModal(${catIndex}, ${itemIndex})">編輯</button>
+                                    <button class="btn-danger-custom" onclick="deleteMenuItem(${catIndex}, ${itemIndex})">刪除</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    itemsHtml = `<p style="color:#aaa; padding:10px; font-size:13px;">此分類尚無品項</p>`;
+                }
+
+                container.innerHTML += `
+                    <div style="background:#f8f9fa; border:1px solid #e1e8ed; border-radius:8px; margin-bottom:15px; overflow:hidden;">
+                        <div style="background:#edf2f7; padding:12px 15px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+                            <span>${cat.category}</span>
+                            <button class="btn-danger-custom" style="background-color:#c0392b; padding:4px 8px; font-size:11px;" onclick="deleteCategory(${catIndex})">刪除分類</button>
+                        </div>
+                        <div style="padding:10px 15px; background:white;">
+                            ${itemsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 新增分類
+        function openAddCategoryModal() {
+            const catName = prompt("請輸入新分類名稱 (例如: 🥞 輕食早點系列):");
+            if (!catName) return;
+
+            database.ref('menuData').once('value').then(snapshot => {
+                let menu = snapshot.val() || defaultMenuData;
+                menu.push({ category: catName.trim(), items: [] });
+                database.ref('menuData').set(menu).then(() => {
+                    alert('分類新增成功！前台已同步更新');
+                    loadAdminMenuData();
+                });
+            });
+        }
+
+        // 刪除分類
+        function deleteCategory(catIndex) {
+            if (!confirm('確定要刪除此分類及底下所有品項嗎？')) return;
+            database.ref('menuData').once('value').then(snapshot => {
+                let menu = snapshot.val() || defaultMenuData;
+                menu.splice(catIndex, 1);
+                database.ref('menuData').set(menu).then(() => {
+                    loadAdminMenuData();
+                });
+            });
+        }
+
+        // 開啟新增品項彈窗
+        function openAddItemModal() {
+            document.getElementById('modal-title').innerText = "新增菜單品項";
+            document.getElementById('edit-item-cat-index').value = "";
+            document.getElementById('edit-item-index').value = "";
+            document.getElementById('item-modal-name').value = "";
+            document.getElementById('item-modal-price').value = "30";
+            document.getElementById('item-modal-prices-json').value = "";
+            
+            document.getElementById('group-single-price').style.display = "block";
+            document.getElementById('group-prices-json').style.display = "none";
+            document.getElementById('item-modal').style.display = "flex";
+        }
+
+        // 開啟編輯品項彈窗
+        function openEditItemModal(catIndex, itemIndex) {
+            database.ref('menuData').once('value').then(snapshot => {
+                let menu = snapshot.val() || defaultMenuData;
+                let item = menu[catIndex].items[itemIndex];
+
+                document.getElementById('modal-title').innerText = "編輯菜單品項";
+                document.getElementById('edit-item-cat-index').value = catIndex;
+                document.getElementById('edit-item-index').value = itemIndex;
+                document.getElementById('item-modal-category').value = catIndex;
+                document.getElementById('item-modal-name').value = item.name;
+
+                if (item.price !== undefined) {
+                    document.getElementById('item-modal-price').value = item.price;
+                    document.getElementById('group-single-price').style.display = "block";
+                    document.getElementById('group-prices-json').style.display = "none";
+                } else if (item.prices) {
+                    document.getElementById('item-modal-prices-json').value = JSON.stringify(item.prices, null, 2);
+                    document.getElementById('group-single-price').style.display = "none";
+                    document.getElementById('group-prices-json').style.display = "block";
+                }
+
+                document.getElementById('item-modal').style.display = "flex";
+            });
+        }
+
+        function closeItemModal() {
+            document.getElementById('item-modal').style.display = "none";
+        }
+
+        // 儲存品項資料
+        function saveItemData() {
+            const catIndex = parseInt(document.getElementById('item-modal-category').value);
+            const itemIndexVal = document.getElementById('edit-item-index').value;
+            const name = document.getElementById('item-modal-name').value.trim();
+
+            if (!name) { alert('請填寫品項名稱！'); return; }
+
+            database.ref('menuData').once('value').then(snapshot => {
+                let menu = snapshot.val() || defaultMenuData;
+                let targetCat = menu[catIndex];
+
+                let newItemObj = { id: "custom_" + Date.now(), name: name };
+                
+                // 判斷該分類原本是用固定 price 還是 prices 結構
+                let hasPricesObj = targetCat.items.some(i => i.prices);
+                if (hasPricesObj || document.getElementById('item-modal-prices-json').value.trim() !== "") {
+                    let jsonStr = document.getElementById('item-modal-prices-json').value.trim();
+                    if (jsonStr) {
+                        try {
+                            newItemObj.prices = JSON.parse(jsonStr);
+                        } catch(e) {
+                            alert('JSON 格式錯誤，請檢查大括號與引號！');
+                            return;
+                        }
+                    } else {
+                        newItemObj.price = parseInt(document.getElementById('item-modal-price').value) || 30;
+                    }
+                } else {
+                    newItemObj.price = parseInt(document.getElementById('item-modal-price').value) || 30;
+                }
+
+                if (itemIndexVal === "") {
+                    // 新增
+                    if (!targetCat.items) targetCat.items = [];
+                    targetCat.items.push(newItemObj);
+                } else {
+                    // 修改
+                    let oldItem = targetCat.items[parseInt(itemIndexVal)];
+                    newItemObj.id = oldItem.id; // 保留原本 ID
+                    if (oldItem.types) newItemObj.types = oldItem.types;
+                    if (oldItem.hasEggOpt) newItemObj.hasEggOpt = oldItem.hasEggOpt;
+                    targetCat.items[parseInt(itemIndexVal)] = newItemObj;
+                }
+
+                database.ref('menuData').set(menu).then(() => {
+                    alert('✨ 菜單品項儲存成功！前台重新整理即可同步更新。');
+                    closeItemModal();
+                    loadAdminMenuData();
+                });
+            });
+        }
+
+        // 刪除品項
+        function deleteMenuItem(catIndex, itemIndex) {
+            if (!confirm('確定要刪除這個品項嗎？')) return;
+            database.ref('menuData').once('value').then(snapshot => {
+                let menu = snapshot.val() || defaultMenuData;
+                menu[catIndex].items.splice(itemIndex, 1);
+                database.ref('menuData').set(menu).then(() => {
+                    loadAdminMenuData();
+                });
+            });
+        }
+
+        // 回復預設菜單
+        function resetMenuToDefault() {
+            if (confirm('⚠️ 確定要將前台菜單全部重設為原始預設版本嗎？')) {
+                database.ref('menuData').set(defaultMenuData).then(() => {
+                    alert('已成功回復預設菜單！');
+                    loadAdminMenuData();
                 });
             }
         }
@@ -539,11 +928,11 @@
         // 頁面載入生命週期
         window.onload = function() {
             const currentLoginState = sessionStorage.getItem('je_admin_login_token');
-            
             if (currentLoginState === 'success_authenticated') {
                 document.getElementById('login-screen-overlay').style.display = "none";
                 document.getElementById('main-admin-content').style.display = "block";
                 listenToFirebaseOrders();
+                loadAdminMenuData();
             } else {
                 document.getElementById('user-name-input').focus();
             }
