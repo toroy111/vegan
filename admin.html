@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>珍愛家蔬食早午餐 - 後台接單系統</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <meta name="robots" content="noindex, nofollow">
     <style>
         :root { --primary-color: #2c3e50; --accent-color: #e67e22; --success-color: #27ae60; --bg-color: #ecf0f1; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
         
-        /* 預設隱藏後台主畫面，登入成功後才顯示 */
+        /* 預設隱藏主體後台，避免未登入外洩 */
         #main-admin-content { display: none; background-color: var(--bg-color); padding: 20px; color: #333; min-height: 100vh; }
         
         header { background: var(--primary-color); color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        
         .dashboard { display: grid; grid-template-columns: 1fr; gap: 20px; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         h2 { margin-bottom: 15px; font-size: 18px; border-left: 4px solid var(--accent-color); padding-left: 10px; }
@@ -29,17 +29,13 @@
         
         .action-btn { background-color: var(--success-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
         .action-btn:hover { background-color: #219653; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        
-        /* 🛠️ 新增：個別刪除按鈕樣式 */
-        .delete-btn { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
-        .delete-btn:hover { background-color: #c0392b; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-
         .clear-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .audio-btn { background-color: #34495e; color: #cbd5e0; border: 1px solid #455a64; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
         .logout-btn { background-color: #7f8c8d; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; margin-left: 10px; }
         .logout-btn:hover { background-color: #95a5a6; }
         
         .audio-select { background-color: #34495e; color: #fff; border: 1px solid #455a64; padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; outline: none; margin-right: 8px; }
+        
         .item-list-text { font-size: 14px; line-height: 1.5; color: #2c3e50; }
         
         .category-block { margin-bottom: 8px; background: #f8f9fa; border-radius: 6px; padding: 6px 10px; border-left: 4px solid #7f8c8d; }
@@ -63,7 +59,6 @@
         
         .spec-badge { background-color: #edf2f7; color: #4a5568; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #e2e8f0; }
         .combo-badge { background-color: #e3faf2; color: #0ca678; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #96f2d7; }
-        .combo-badge { background-color: #e3faf2; color: #0ca678; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #96f2d7; }
         .custom-badge { background-color: #fff4e6; color: #d9480f; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #ffd8a8; }
         
         .note-text { color: #c0392b; font-size: 13px; font-weight: bold; background-color: #fdf2f2; padding: 6px 10px; border-radius: 6px; border-left: 3px solid #e74c3c; word-break: break-all; }
@@ -71,62 +66,52 @@
         
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-        /* 🎨 100% 依據圖片像素級別還原的登入畫面 CSS 樣式 */
+        /* 登入介面遮罩 */
         #login-screen-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #a4f4cd 0%, #76ffd5 100%); /* 精準調校圖片中的柔和綠色光感漸層 */
+            background: linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%);
             display: flex; justify-content: center; align-items: center; z-index: 99999;
         }
         .login-card {
-            background: #ffffff; padding: 45px 35px; border-radius: 24px; /* 大圓角白底卡片 */
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08); width: 100%; max-width: 390px; text-align: center;
+            background: #ffffff; padding: 40px 30px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center;
         }
         .login-card h2 {
-            font-size: 28px; font-weight: 800; color: #2d3748; margin-bottom: 35px; 
-            border: none; padding-left: 0; letter-spacing: 1px;
+            font-size: 26px; font-weight: bold; color: #333333; margin-bottom: 30px; border: none; padding-left: 0;
         }
         .input-group {
-            position: relative; margin-bottom: 20px; text-align: left;
+            position: relative; margin-bottom: 18px; text-align: left;
         }
-        /* 還原左側的精美小圖示 */
         .input-group i.left-icon {
-            position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 16px;
+            position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaaaaa; font-size: 16px;
         }
-        /* 還原密碼右側的切換眼睛 */
         .input-group i.eye-icon {
-            position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 16px; cursor: pointer; transition: color 0.2s;
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #aaaaaa; font-size: 16px; cursor: pointer; transition: 0.2s;
         }
-        .input-group i.eye-icon:hover { color: #4a5568; }
-        
-        /* 橢圓形扁平化輸入框設計 */
+        .input-group i.eye-icon:hover { color: #333333; }
         .login-input {
-            width: 100%; padding: 15px 20px 15px 50px; border: 1px solid #e2e8f0; background-color: #f7fafc;
-            border-radius: 30px; font-size: 14px; color: #4a5568; outline: none; transition: all 0.3s; box-sizing: border-box;
+            width: 100%; padding: 14px 15px 14px 45px; border: 1px solid #e0e0e0; background-color: #f9f9f9;
+            border-radius: 25px; font-size: 14px; color: #333; outline: none; transition: all 0.3s; box-sizing: border-box;
         }
         .login-input:focus {
-            background-color: #ffffff; border-color: #2ecc71; box-shadow: 0 0 10px rgba(46, 204, 113, 0.15);
+            background-color: #ffffff; border-color: #2ec4b6; box-shadow: 0 0 8px rgba(46, 196, 182, 0.2);
         }
-        #user-pass-input { padding-right: 50px; } /* 避免文字重疊眼睛 */
+        #user-pass-input { padding-right: 45px; }
 
-        /* 還原寬版、橢圓、亮綠色漸層登入按鈕 */
         .btn-submit-login {
-            width: 100%; background: linear-gradient(to right, #2ecc71, #27ae60); color: white; border: none;
-            padding: 15px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(46,204,113,0.25); margin-top: 10px; margin-bottom: 25px; transition: all 0.3s;
-            letter-spacing: 1px;
+            width: 100%; background: linear-gradient(to right, #2ec4b6, #0cbaba); color: white; border: none;
+            padding: 14px; border-radius: 25px; font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(46,196,182,0.3); margin-top: 10px; margin-bottom: 20px; transition: 0.3s;
         }
         .btn-submit-login:hover {
-            transform: translateY(-1px); box-shadow: 0 7px 20px rgba(46,204,113,0.35); filter: brightness(1.03);
+            transform: translateY(-1px); box-shadow: 0 6px 20px rgba(46,196,182,0.4);
         }
-        
-        /* 還原左右分開的底端文字連結 */
         .login-footer-links {
-            display: flex; justify-content: space-between; font-size: 12px; color: #a0aec0; padding: 0 8px;
+            display: flex; justify-content: space-between; font-size: 12px; color: #888888; padding: 0 5px;
         }
-        .login-footer-links a { text-decoration: none; color: #a0aec0; transition: color 0.2s; cursor: pointer; }
-        .login-footer-links a:hover { color: #27ae60; text-decoration: underline; }
+        .login-footer-links a { text-decoration: none; color: #2ec4b6; font-weight: 500; cursor: pointer; }
         
-        #error-msg-hint { color: #e74c3c; font-size: 13px; font-weight: bold; margin-bottom: 18px; display: none; }
+        #error-msg-hint { color: #e74c3c; font-size: 13px; font-weight: bold; margin-bottom: 15px; display: none; }
     </style>
 </head>
 <body>
@@ -151,8 +136,8 @@
             <button class="btn-submit-login" onclick="executeLoginValidation()">LOGIN</button>
             
             <div class="login-footer-links">
-                <a onclick="alert('管理員註冊功能已鎖定。如需更改管理員密碼，請直接修改 HTML 程式碼第 159 行即可。')">Register</a>
-                <a onclick="alert('提示：目前的預設帳號是 admin，預設密碼是 8888。')">Forgot Password?</a>
+                <a onclick="alert('管理員註冊功能已鎖定。')">Register</a>
+                <a onclick="alert('預設密碼為 love11。')">Forgot Password?</a>
             </div>
         </div>
     </div>
@@ -185,38 +170,41 @@
                             <th style="width: 7%;">單號</th>
                             <th style="width: 14%;">取餐時間/方式</th>
                             <th style="width: 13%;">聯絡電話 / LINE</th>
-                            <th style="width: 39%;">點餐品項明細 (依類別自動歸類)</th>
+                            <th style="width: 45%;">點餐品項明細 (依類別自動歸類)</th>
                             <th style="width: 11%;">全單大備註</th>
                             <th style="width: 8%;">總金額</th>
                             <th style="width: 8%;">目前狀態</th>
                             <th style="width: 9%;">出餐操作</th>
-                            <th style="width: 7%;">刪除</th> <!-- 🛠️ 新增欄位 -->
                         </tr>
                     </thead>
                     <tbody id="orders-tbody">
-                        <tr><td colspan="9" style="text-align:center; color:#aaa; padding:30px;">連線中，請稍候...</td></tr>
+                        <tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">連線中，請稍候...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
+    <!-- Firebase SDK (Compat 模式) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAgeP2a6Z-TqJaZ5F0j_2UoXVQ_WE3sckw",
-  authDomain: "jaffff-34d02.firebaseapp.com",
-  databaseURL: "https://jaffff-34d02-default-rtdb.firebaseio.com",
-  projectId: "jaffff-34d02",
-  storageBucket: "jaffff-34d02.firebasestorage.app",
-  messagingSenderId: "332430248808",
-  appId: "1:332430248808:web:b81a52b4c3b15021e664dd",
-  measurementId: "G-T9YGSE9EX6"
+            authDomain: "jaffff-34d02.firebaseapp.com",
+            databaseURL: "https://jaffff-34d02-default-rtdb.firebaseio.com",
+            projectId: "jaffff-34d02",
+            storageBucket: "jaffff-34d02.firebasestorage.app",
+            messagingSenderId: "332430248808",
+            appId: "1:332430248808:web:b81a52b4c3b15021e664dd",
+            measurementId: "G-T9YGSE9EX6"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        // 初始化 Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const database = firebase.database();
         let firebaseListenerRef = null; 
 
@@ -233,13 +221,12 @@
             }
         }
 
-        // 🔐 登入帳密驗證邏輯
+        // 🔐 登入驗證功能 (帳號：admin / 密碼：love11)
         function executeLoginValidation() {
             const username = document.getElementById('user-name-input').value.trim();
             const password = document.getElementById('user-pass-input').value;
             const errorHint = document.getElementById('error-msg-hint');
             
-            // 🔑 您的自訂後台登入帳密設定在這邊
             if (username === "admin" && password === "love11") {
                 errorHint.style.display = "none";
                 
@@ -247,7 +234,9 @@
                 document.getElementById('main-admin-content').style.display = "block";
                 
                 sessionStorage.setItem('je_admin_login_token', 'success_authenticated');
-                listenToFirebaseOrders(); // 驗證通過，正式通電連線 Firebase
+                
+                // 正式啟動 Firebase 接單監聽
+                listenToFirebaseOrders();
             } else {
                 errorHint.style.display = "block";
                 document.getElementById('user-pass-input').value = "";
@@ -255,14 +244,14 @@
             }
         }
 
-        // 🚪 登出系統
+        // 🚪 登出管理系統
         function logoutAdminSystem() {
             if (confirm('確定要登出並返回管理員登入畫面嗎？')) {
                 sessionStorage.removeItem('je_admin_login_token');
                 if (firebaseListenerRef) {
                     firebaseListenerRef.off();
                 }
-                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="9" style="text-align:center; color:#aaa; padding:30px;">連線中，請稍候...</td></tr>`;
+                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">連線中，請稍候...</td></tr>`;
                 document.getElementById('user-name-input').value = "";
                 document.getElementById('user-pass-input').value = "";
                 document.getElementById('main-admin-content').style.display = "none";
@@ -270,7 +259,7 @@
             }
         }
 
-        // 🎵 音效模組
+        // 🎵 音效播放
         function playDingDong() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -352,7 +341,7 @@
 
         let lastKnownTopOrderKey = null;
 
-        // Firebase 資料庫即時監聽
+        // 連線並即時抓取 Firebase 資料庫訂單
         function listenToFirebaseOrders() {
             firebaseListenerRef = database.ref('orders');
 
@@ -361,7 +350,7 @@
                 const tbody = document.getElementById('orders-tbody');
                 
                 if (!data) {
-                    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#aaa; padding:30px;">目前沒有任何點餐訂單紀錄</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#aaa; padding:30px;">目前沒有任何點餐訂單紀錄</td></tr>`;
                     lastKnownTopOrderKey = null;
                     return;
                 }
@@ -389,10 +378,10 @@
                 renderAdminTable(ordersArray); 
             }, (error) => {
                 console.error("後台讀取 Firebase 失敗:", error);
+                document.getElementById('orders-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#e74c3c; padding:30px;">❌ 資料庫連線或讀取失敗，請確認網路與權限設定</td></tr>`;
             });
         }
 
-        // 依品項分類歸納
         function formatItemsToCategorizedHtml(itemsString) {
             if (!itemsString) return '無明細';
             
@@ -480,7 +469,6 @@
             return finalHtml || '無明細';
         }
 
-        // 表格渲染
         function renderAdminTable(orders) {
             const tbody = document.getElementById('orders-tbody');
             let html = '';
@@ -504,9 +492,6 @@
 
                 let categorizedItemsHtml = formatItemsToCategorizedHtml(order.items);
 
-                // 🛠️ 新增：獨立刪除按鈕 HTML 區塊
-                let deleteButtonHtml = `<button class="delete-btn" onclick="deleteSingleOrder('${order.firebaseKey}', '${order.id || '---'}')"><i class="fa-solid fa-trash-can"></i></button>`;
-
                 html += `
                     <tr>
                         <td style="font-weight:bold; color:var(--accent-color);">#${order.id || '---'}</td>
@@ -523,7 +508,6 @@
                         <td style="font-weight:bold; color:#d63031; font-size:16px;">$${order.total || 0}</td>
                         <td><span class="status-badge ${statusClass}">${order.status || '新訂單'}</span></td>
                         <td>${actionButtonHtml}</td>
-                        <td>${deleteButtonHtml}</td> <!-- 🛠️ 新增欄位 -->
                     </tr>
                 `;
             });
@@ -540,20 +524,6 @@
             });
         }
 
-        // 🛠️ 新增：刪除單筆訂單的 JavaScript 函數
-        function deleteSingleOrder(firebaseKey, orderId) {
-            if (confirm(`⚠️ 確定要刪除單號 #${orderId} 的訂單嗎？\n此動作將直接自雲端資料庫中移除且無法復原！`)) {
-                database.ref(`orders/${firebaseKey}`).remove()
-                .then(() => {
-                    // 這裡不需手動更新畫面，因為 listenToFirebaseOrders 會自動監聽並即時刷新
-                    console.log(`訂單 #${orderId} 已成功刪除`);
-                })
-                .catch(err => {
-                    alert('刪除訂單失敗: ' + err.message);
-                });
-            }
-        }
-
         function clearAllOrders() {
             if (confirm('⚠️ 確定要徹底清空雲端資料庫內的所有訂單紀錄嗎？\n此動作將無法復原！')) {
                 database.ref('orders').remove()
@@ -566,9 +536,10 @@
             }
         }
 
-        // 頁面生命週期判斷
+        // 頁面載入生命週期
         window.onload = function() {
             const currentLoginState = sessionStorage.getItem('je_admin_login_token');
+            
             if (currentLoginState === 'success_authenticated') {
                 document.getElementById('login-screen-overlay').style.display = "none";
                 document.getElementById('main-admin-content').style.display = "block";
