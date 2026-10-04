@@ -383,25 +383,21 @@
         }
 
         // 🌟 修正重點：改為即時監聽 `.on('value', ...)`，確保後台一修改價格或刪除品項，前台即時同步更新！
-        function listenToFirebaseMenu() {
-            const menuRef = database.ref('menu');
-            menuRef.on('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    menu = snapshot.val();
-                    initMenu();
-                } else {
-                    menuRef.set(defaultMenu).then(() => {
-                        menu = defaultMenu;
-                        initMenu();
-                    });
-                }
-            }, (error) => {
-                console.error("讀取 Firebase 菜單失敗，使用預設菜單:", error);
+        // 【前台保持不變】前台會自動監聽 Firebase 變更並同步最新分類名稱
+function listenToFirebaseMenu() {
+    const menuRef = database.ref('menu');
+    menuRef.on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            menu = snapshot.val();
+            initMenu(); // 自動重新渲染前台摺疊選單
+        } else {
+            menuRef.set(defaultMenu).then(() => {
                 menu = defaultMenu;
                 initMenu();
             });
         }
-
+    });
+}
         function initMenu() {
             const container = document.getElementById('accordion-container');
             container.innerHTML = '';
