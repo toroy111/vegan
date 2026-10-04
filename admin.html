@@ -838,37 +838,42 @@
 
         // 🌟 本地規格左右移動：保持當前分類與捲動位置，絕不自動收合
         function moveItemSpecLocally(catIndex, itemIndex, specIndex, direction) {
-            collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
-            let item = currentAdminMenuCache[catIndex].items[itemIndex];
-            if (!item.prices) return;
+        collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
+        let item = currentAdminMenuCache[catIndex].items[itemIndex];
+        if (!item.prices) return;
 
-            let entries = Object.entries(item.prices);
-            let targetIndex = specIndex + direction;
-            if (targetIndex < 0 || targetIndex >= entries.length) return;
+        let entries = Object.entries(item.prices);
+        let targetIndex = specIndex + direction;
+        if (targetIndex < 0 || targetIndex >= entries.length) return;
 
-            let temp = entries[specIndex];
-            entries[specIndex] = entries[targetIndex];
-            entries[targetIndex] = temp;
+        let temp = entries[specIndex];
+        entries[specIndex] = entries[targetIndex];
+        entries[targetIndex] = temp;
 
-            item.prices = Object.fromEntries(entries);
-            
-            // 重新渲染並維持當前分類展開狀態
+        item.prices = Object.fromEntries(entries);
+        
+        // 自動儲存至 Firebase 雲端，確保重新整理不會跑掉，前台也會同步
+        database.ref('menu').set(currentAdminMenuCache).then(() => {
             renderAdminMenuUIKeepOpen(catIndex);
-        }
+        });
+    }
 
-        // 🌟 本地品項上下移動
-        function moveMenuItemLocally(catIndex, itemIndex, direction) {
-            collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
-            let targetItems = currentAdminMenuCache[catIndex].items;
-            let targetIndex = itemIndex + direction;
-            if (targetIndex < 0 || targetIndex >= targetItems.length) return;
+    // 🌟 修正：品項上下移動後，自動寫入 Firebase 雲端資料庫
+    function moveMenuItemLocally(catIndex, itemIndex, direction) {
+        collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
+        let targetItems = currentAdminMenuCache[catIndex].items;
+        let targetIndex = itemIndex + direction;
+        if (targetIndex < 0 || targetIndex >= targetItems.length) return;
 
-            let temp = targetItems[itemIndex];
-            targetItems[itemIndex] = targetItems[targetIndex];
-            targetItems[targetIndex] = temp;
+        let temp = targetItems[itemIndex];
+        targetItems[itemIndex] = targetItems[targetIndex];
+        targetItems[targetIndex] = temp;
 
+        // 自動儲存至 Firebase 雲端
+        database.ref('menu').set(currentAdminMenuCache).then(() => {
             renderAdminMenuUIKeepOpen(catIndex);
-        }
+        });
+    }
 
         // 🌟 本地刪除品項
         function deleteMenuItemLocally(catIndex, itemIndex) {
