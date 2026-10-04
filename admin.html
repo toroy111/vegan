@@ -95,12 +95,11 @@
         .admin-item-name { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
         .admin-specs-preview { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         
-        /* ✨ 內聯價格輸入框樣式 */
         .price-input-group { display: inline-flex; align-items: center; background: #fff7ed; border: 1px solid #fdba74; padding: 2px 6px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #c2410c; gap: 4px; }
         .price-input-group input { width: 55px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 4px; font-size: 13px; text-align: center; font-weight: bold; color: #e11d48; outline: none; }
         .price-input-group input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(230,126,34,0.2); }
 
-        .admin-item-buttons { display: flex; gap: 8px; align-items: center; }
+        .admin-item-buttons { display: flex; gap: 6px; align-items: center; }
 
         .btn-primary-custom { background-color: #3b82f6; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary-custom:hover { background-color: #2563eb; box-shadow: 0 2px 8px rgba(59,130,246,0.3); }
@@ -108,11 +107,11 @@
         .btn-success-custom { background-color: #10b981; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-success-custom:hover { background-color: #059669; box-shadow: 0 2px 8px rgba(16,185,129,0.3); }
 
-        .btn-danger-custom { background-color: #ef4444; color: white; border: none; padding: 7px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-danger-custom { background-color: #ef4444; color: white; border: none; padding: 7px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; transition: 0.2s; }
         .btn-danger-custom:hover { background-color: #dc2626; }
 
-        .btn-warning-custom { background-color: #f59e0b; color: white; border: none; padding: 7px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
-        .btn-warning-custom:hover { background-color: #d97706; }
+        .btn-move-custom { background-color: #64748b; color: white; border: none; padding: 7px 9px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; transition: 0.2s; }
+        .btn-move-custom:hover { background-color: #475569; }
 
         #back-to-top-btn {
             position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px;
@@ -178,7 +177,7 @@
     <div id="main-admin-content">
         <header>
             <div>
-                <h1 style="font-size: 22px;">🍳 珍愛家蔬食早午餐 - 後台管理與接單系統 🔔</h1>
+                <h1 style="font-size: 22px;">🍳 珍愛家素食早午餐 - 後台管理與接單系統 🔔</h1>
                 <p style="font-size: 12px; opacity: 0.85; margin-top: 4px;">系統已成功連線 Firebase：新訂單即時通知、支援後台動態修改前台菜單與價格</p>
             </div>
             <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
@@ -365,7 +364,7 @@
                 ]
             },
             {
-                category: "🍳 酥脆蛋餅 / 抓餅系列 ",
+                category: "🍳 酥脆蛋餅 / 抓餅系列",
                 isEggCakeSection: true,
                 items: [
                     { id: "g_01", name: "原味", prices: { "蛋餅": 25, "抓餅": 45 } },
@@ -729,17 +728,21 @@
                             specsHtml = `
                                 <div class="price-input-group">
                                     固定價格: $
-                                    <input type="number" id="price-input-${catIndex}-${itemIndex}" value="${item.price}" data-type="single">
+                                    <input type="number" id="price-input-${catIndex}-${itemIndex}" value="${item.price}">
                                 </div>
                             `;
                         } else if (item.prices) {
                             specsHtml = Object.entries(item.prices).map(([k, v], pIndex) => `
                                 <div class="price-input-group">
                                     ${k}: $
-                                    <input type="number" id="price-input-${catIndex}-${itemIndex}-${pIndex}" value="${v}" data-type="multi" data-key="${k}">
+                                    <input type="number" id="price-input-${catIndex}-${itemIndex}-${pIndex}" value="${v}">
                                 </div>
                             `).join('');
                         }
+
+                        // 上移與下移按鈕邏輯
+                        let moveUpBtn = itemIndex > 0 ? `<button class="btn-move-custom" onclick="moveMenuItem(${catIndex}, ${itemIndex}, -1)" title="往上移動"><i class="fa-solid fa-arrow-up"></i></button>` : '';
+                        let moveDownBtn = itemIndex < cat.items.length - 1 ? `<button class="btn-move-custom" onclick="moveMenuItem(${catIndex}, ${itemIndex}, 1)" title="往下移動"><i class="fa-solid fa-arrow-down"></i></button>` : '';
 
                         itemsHtml += `
                             <div class="admin-item-card-row" id="item-row-${catIndex}-${itemIndex}">
@@ -751,6 +754,8 @@
                                     <div class="admin-specs-preview">${specsHtml}</div>
                                 </div>
                                 <div class="admin-item-buttons">
+                                    ${moveUpBtn}
+                                    ${moveDownBtn}
                                     <button class="btn-danger-custom" onclick="deleteMenuItem(${catIndex}, ${itemIndex})"><i class="fa-solid fa-trash"></i> 刪除</button>
                                 </div>
                             </div>
@@ -785,40 +790,75 @@
             });
         }
 
-        // ✨ 儲存特定分類下的所有價格與品項名稱變更
+        // 收集畫面上該分類的最新資料（含名稱、價格與順序）並直接寫入資料庫
+        function collectCategoryDataFromDOM(catIndex, menu) {
+            let targetCat = menu[catIndex];
+            if (!targetCat.items) return;
+
+            targetCat.items.forEach((item, itemIndex) => {
+                const nameInput = document.getElementById(`name-input-${catIndex}-${itemIndex}`);
+                if (nameInput) {
+                    item.name = nameInput.value.trim() || item.name;
+                }
+
+                if (item.price !== undefined) {
+                    const priceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}`);
+                    if (priceInput) {
+                        item.price = parseInt(priceInput.value) || 0;
+                    }
+                } else if (item.prices) {
+                    Object.keys(item.prices).forEach((key, pIndex) => {
+                        const multiPriceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}-${pIndex}`);
+                        if (multiPriceInput) {
+                            item.prices[key] = parseInt(multiPriceInput.value) || 0;
+                        }
+                    });
+                }
+            });
+        }
+
+        // 儲存特定分類變更
         function saveCategoryChanges(catIndex) {
             database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val() || defaultMenuData;
-                let targetCat = menu[catIndex];
-
-                if (!targetCat.items) return;
-
-                targetCat.items.forEach((item, itemIndex) => {
-                    // 抓取修改後的品項名稱
-                    const nameInput = document.getElementById(`name-input-${catIndex}-${itemIndex}`);
-                    if (nameInput) {
-                        item.name = nameInput.value.trim() || item.name;
-                    }
-
-                    // 抓取修改後的價格
-                    if (item.price !== undefined) {
-                        const priceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}`);
-                        if (priceInput) {
-                            item.price = parseInt(priceInput.value) || 0;
-                        }
-                    } else if (item.prices) {
-                        Object.keys(item.prices).forEach((key, pIndex) => {
-                            const multiPriceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}-${pIndex}`);
-                            if (multiPriceInput) {
-                                item.prices[key] = parseInt(multiPriceInput.value) || 0;
-                            }
-                        });
-                    }
-                });
+                collectCategoryDataFromDOM(catIndex, menu);
 
                 database.ref('menu').set(menu).then(() => {
-                    alert(`✅ 「${targetCat.category}」分類修改已成功儲存！`);
+                    alert(`✅ 「${menu[catIndex].category}」分類修改已成功儲存！`);
                     loadAdminMenuData();
+                });
+            });
+        }
+
+        // 上移或下移品項位置
+        function moveMenuItem(catIndex, itemIndex, direction) {
+            database.ref('menu').once('value').then(snapshot => {
+                let menu = snapshot.val() || defaultMenuData;
+                // 先把畫面上還沒儲存的更改抓下來，避免移動時資料跑掉
+                collectCategoryDataFromDOM(catIndex, menu);
+
+                let targetItems = menu[catIndex].items;
+                let targetIndex = itemIndex + direction;
+
+                if (targetIndex < 0 || targetIndex >= targetItems.length) return;
+
+                // 交換位置
+                let temp = targetItems[itemIndex];
+                targetItems[itemIndex] = targetItems[targetIndex];
+                targetItems[targetIndex] = temp;
+
+                database.ref('menu').set(menu).then(() => {
+                    loadAdminMenuData();
+                    // 保持原本展開的狀態
+                    setTimeout(() => {
+                        const body = document.getElementById(`cat-body-${catIndex}`);
+                        const card = document.getElementById(`cat-card-${catIndex}`);
+                        const icon = card.querySelector(`.toggle-icon-${catIndex}`);
+                        const header = card.querySelector('.admin-cat-header');
+                        if(body) body.classList.add('open');
+                        if(header) header.classList.add('active');
+                        if(icon) icon.style.transform = 'rotate(90deg)';
+                    }, 50);
                 });
             });
         }
