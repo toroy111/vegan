@@ -18,7 +18,6 @@
         .shop-layout { display: grid; grid-template-columns: 2.5fr 1fr; gap: 20px; }
         @media (max-width: 992px) { .shop-layout { grid-template-columns: 1fr; } }
         
-        /* 摺疊區塊樣式 */
         .menu-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .accordion-item { border: 1px solid #e1e8ed; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
         .accordion-header { background-color: #f8f9fa; padding: 16px 20px; font-size: 18px; font-weight: bold; color: #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; user-select: none; }
@@ -30,7 +29,6 @@
         .accordion-content { display: none; padding: 20px; background: #fff; }
         .accordion-item.active .accordion-content { display: block; }
         
-        /* 商品卡片排版 */
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media (max-width: 650px) { .menu-grid { grid-template-columns: 1fr; } }
         
@@ -38,7 +36,6 @@
         .menu-item:hover { border-color: var(--primary-color); }
         .item-name { font-weight: bold; font-size: 16px; margin-bottom: 8px; color: #2d3748; }
         
-        /* 客製化按鈕與下拉選單 */
         .option-group { margin: 8px 0; display: flex; flex-wrap: wrap; gap: 6px; }
         .opt-label { font-size: 11px; color: #718096; width: 100%; margin-top: 4px; font-weight: bold; }
         .opt-btn { background: #edf2f7; border: 1px solid #e2e8f0; padding: 6px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; transition: 0.2s; color: #4a5568; }
@@ -60,7 +57,6 @@
         .add-btn { background: var(--primary-color); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .add-btn:hover { background: #d35400; }
         
-        /* 購物車區塊 */
         .cart-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; }
         .cart-item { padding: 12px 0; border-bottom: 1px solid #edf2f7; font-size: 14px; }
         .cart-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
@@ -72,7 +68,6 @@
         .flex-inputs { display: flex; gap: 8px; margin-bottom: 4px; }
         label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 5px; color: #4a5568; }
 
-        /* 🌟 右下角浮動快捷鍵 */
         .float-buttons { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
         .float-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background-color: rgba(44, 62, 80, 0.85); color: white; font-size: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: 0.3s; }
         .float-btn:hover { background-color: var(--primary-color); transform: scale(1.05); }
@@ -84,7 +79,6 @@
             .float-btn { width: calc(40px + 2vw); height: calc(40px + 2vw); font-size: calc(16px + 1vw); }
         }
 
-        /* 🌟 收據明細彈窗樣式 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
         .receipt-card { background: #fff; width: 340px; padding: 25px 20px; border-radius: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-family: 'Courier New', Courier, monospace; color: #111; position: relative; }
         .receipt-header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 12px; margin-bottom: 12px; }
@@ -105,7 +99,7 @@
 <body>
 
     <header>
-        <h1>珍愛家素食早午餐 (JLH BRUNCH)</h1>
+        <h1>珍愛家蔬食早午餐 (JLH BRUNCH)</h1>
         <p>電話：0908-313913 | 營業時間：二至五 5:30~13:00 / 六日 5:30~13:30 (每週一公休)</p>
     </header>
 
@@ -113,7 +107,9 @@
         <div class="shop-layout">
             <div class="menu-section">
                 <h2 style="margin-bottom: 15px; font-size: 20px;">📖 點選分類查看餐點</h2>
-                <div id="accordion-container"></div>
+                <div id="accordion-container">
+                    <p style="text-align:center; color:#aaa; padding:20px;">載入即時菜單中...</p>
+                </div>
             </div>
             
             <div class="cart-section" id="target-cart-section">
@@ -136,7 +132,6 @@
                         </div>
                     </div>
 
-                    <!-- 外帶專屬欄位 -->
                     <div id="takeout-fields">
                         <label>📞 聯絡電話 (必填)：</label>
                         <input type="tel" id="user-phone" placeholder="填寫聯絡手機" class="input-field">
@@ -144,7 +139,6 @@
                         <label>💬 LINE ID (選填)：</label>
                         <input type="text" id="user-line" placeholder="方便聯絡通知" class="input-field">
 
-                        <!-- 外帶分裝需求 -->
                         <label>🛍️ 外帶分裝需求：</label>
                         <select id="bag-split-option" class="input-field" onchange="onBagOptionChange()">
                             <option value="不指定/裝一袋">不指定 / 裝成一袋</option>
@@ -168,12 +162,11 @@
         </div>
     </div>
 
-    <!-- 訂單完成後的明細彈窗與圖片生成區塊 -->
     <div id="receipt-modal" class="modal-overlay">
         <div style="display: flex; flex-direction: column; align-items: center;">
             <div id="printable-receipt" class="receipt-card">
                 <div class="receipt-header">
-                    <h2>珍愛家素食早午餐</h2>
+                    <h2>珍愛家蔬食早午餐</h2>
                     <p>#<span id="rec-order-id">1001</span> 點餐明細憑證</p>
                     <div style="font-size: 11px; color: #555; margin-top: 2px;" id="rec-print-time">2026-09-19 09:15</div>
                 </div>
@@ -222,10 +215,11 @@
             measurementId: "G-2FZRM3QKBN"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const database = firebase.database();
 
-        // 預設的完整菜單資料（對應你要求的變數名稱：menu）
         const defaultMenu = [
             {
                 category: "🥪 主食系列 (吐司 / 漢堡 / 潛艇堡)",
@@ -354,10 +348,9 @@
             }
         ];
 
-        let menu = []; // 實際抓取與渲染使用的 menu 變數
+        let menu = []; 
         let cart = [];
 
-        // 切換內用/外帶時顯示與隱藏欄位
         function toggleDiningMode() {
             const dtype = document.getElementById('dining-type').value;
             const takeoutFields = document.getElementById('takeout-fields');
@@ -389,22 +382,20 @@
             }
         }
 
-        // 🌟 從 Firebase 撈取 menu 資料，若無則自動初始化寫入
-        function loadMenuFromFirebase() {
+        // 🌟 修正重點：改為即時監聽 `.on('value', ...)`，確保後台一修改價格或刪除品項，前台即時同步更新！
+        function listenToFirebaseMenu() {
             const menuRef = database.ref('menu');
-            menuRef.once('value').then((snapshot) => {
+            menuRef.on('value', (snapshot) => {
                 if (snapshot.exists()) {
                     menu = snapshot.val();
                     initMenu();
                 } else {
-                    // 如果 Firebase 裡面還沒有 menu，就把預設的寫進去建立
                     menuRef.set(defaultMenu).then(() => {
                         menu = defaultMenu;
                         initMenu();
-                        console.log("已成功初始化菜單至 Firebase");
                     });
                 }
-            }).catch((error) => {
+            }, (error) => {
                 console.error("讀取 Firebase 菜單失敗，使用預設菜單:", error);
                 menu = defaultMenu;
                 initMenu();
@@ -657,6 +648,7 @@
 
         function addToCart(id, name) {
             let item = findItemById(id);
+            if (!item) { alert('此品項已不存在或已被刪除！'); return; }
             let fullName = name;
             let finalPrice = 0;
 
@@ -882,7 +874,7 @@
         window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('order-date').value = today;
-            loadMenuFromFirebase(); // 頁面載入時從 Firebase 撈取菜單（若無資料會自動寫入建立）
+            listenToFirebaseMenu(); // 啟動即時菜單監聽
             toggleDiningMode(); 
         };
     </script>
