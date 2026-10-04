@@ -382,22 +382,25 @@
             }
         }
 
-        // 🌟 修正重點：改為即時監聽 `.on('value', ...)`，確保後台一修改價格或刪除品項，前台即時同步更新！
-        // 【前台保持不變】前台會自動監聽 Firebase 變更並同步最新分類名稱
-function listenToFirebaseMenu() {
-    const menuRef = database.ref('menu');
-    menuRef.on('value', (snapshot) => {
-        if (snapshot.exists()) {
-            menu = snapshot.val();
-            initMenu(); // 自動重新渲染前台摺疊選單
-        } else {
-            menuRef.set(defaultMenu).then(() => {
+        function listenToFirebaseMenu() {
+            const menuRef = database.ref('menu');
+            menuRef.on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    menu = snapshot.val();
+                    initMenu();
+                } else {
+                    menuRef.set(defaultMenu).then(() => {
+                        menu = defaultMenu;
+                        initMenu();
+                    });
+                }
+            }, (error) => {
+                console.error("讀取 Firebase 菜單失敗，使用預設菜單:", error);
                 menu = defaultMenu;
                 initMenu();
             });
         }
-    });
-}
+
         function initMenu() {
             const container = document.getElementById('accordion-container');
             container.innerHTML = '';
@@ -549,6 +552,7 @@ function listenToFirebaseMenu() {
                 html += `</div><div class="item-footer"><span class="item-price" id="price-${item.id}">$${initPrice}</span>`;
             } 
             else if (item.prices && !item.tempOptions) {
+                // 🌟 前台渲染規格按鈕時，會依照資料庫裡的 keys 順序排列，確保後台調換順序後前台跟著變動
                 html += `<div class="opt-label">選擇規格：</div><div class="option-group" id="spec-${item.id}">`;
                 Object.keys(item.prices).forEach((spec, idx) => { html += `<button class="opt-btn ${idx===0?'selected':''}" onclick="updateSpecPrice('${item.id}', ${item.prices[spec]}, this)">${spec}</button>`; });
                 html += `</div>`;
@@ -870,7 +874,7 @@ function listenToFirebaseMenu() {
         window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('order-date').value = today;
-            listenToFirebaseMenu(); // 啟動即時菜單監聽
+            listenToFirebaseMenu(); 
             toggleDiningMode(); 
         };
     </script>
