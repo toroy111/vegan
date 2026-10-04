@@ -816,7 +816,7 @@
                 timestamp: firebase.database.ServerValue.TIMESTAMP 
             };
 
-           firebase.database.ref('orders').push(newOrder)
+           firebase.database().ref('orders').push(newOrder)
             .then(() => {
                 localStorage.setItem('jlh_order_id_counter', currentId + 1);
 
