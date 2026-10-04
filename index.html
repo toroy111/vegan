@@ -609,28 +609,61 @@ function listenToFirebaseMenu() {
             }
         }
 
-        function updateMainPrice(id, clickedBtn) {
-            if(clickedBtn) { selectSingleBtn(clickedBtn); }
-            let item = findItemById(id);
-            const typeSelected = document.getElementById(`type-${id}`).querySelector('.opt-btn.selected').innerText;
-            const eggSelected = document.getElementById(`egg-${id}`).querySelector('.opt-btn.selected').innerText;
-            let key = `${typeSelected}_${eggSelected}`;
-            let price = item.prices && item.prices[key] ? item.prices[key] : 0;
-            document.getElementById(`price-${id}`).innerText = `$${price}`;
+       // 確保主食類價格計算能正確對應後台的 prices 物件
+function updateMainPrice(id, clickedBtn) {
+    if(clickedBtn) { selectSingleBtn(clickedBtn); }
+    let item = findItemById(id);
+    if (!item) return;
+    
+    const typeElem = document.getElementById(`type-${id}`);
+    const eggElem = document.getElementById(`egg-${id}`);
+    
+    const typeSelected = typeElem ? typeElem.querySelector('.opt-btn.selected')?.innerText : '';
+    const eggSelected = eggElem ? eggElem.querySelector('.opt-btn.selected')?.innerText : '無蛋';
+    
+    let key = `${typeSelected}_${eggSelected}`;
+    let price = 30; // 預設值
+    
+    if (item.prices) {
+        if (item.prices[key] !== undefined) {
+            price = item.prices[key];
+        } else if (item.prices[`${typeSelected}_無蛋`] !== undefined) {
+            price = item.prices[`${typeSelected}_無蛋`];
+        } else {
+            price = Object.values(item.prices)[0] || 30;
         }
-        
-        function updateSpecPrice(id, price, clickedBtn) {
-            if(clickedBtn) { selectSingleBtn(clickedBtn); }
-            document.getElementById(`price-${id}`).innerText = `$${price}`;
-        }
+    }
+    
+    const priceElement = document.getElementById(`price-${id}`);
+    if (priceElement) {
+        priceElement.innerText = `$${price}`;
+    }
+}
 
-        function updateDrinkPrice(id, clickedBtn) {
-            if(clickedBtn) { selectSingleBtn(clickedBtn); }
-            let item = findItemById(id);
-            const sizeSelected = document.getElementById(`size-${id}`).querySelector('.opt-btn.selected').innerText;
-            let price = item.prices[sizeSelected];
-            document.getElementById(`price-${id}`).innerText = `$${price}`;
-        }
+// 確保一般規格價格能正確更新
+function updateSpecPrice(id, price, clickedBtn) {
+    if(clickedBtn) { selectSingleBtn(clickedBtn); }
+    const priceElement = document.getElementById(`price-${id}`);
+    if (priceElement) {
+        priceElement.innerText = `$${price}`;
+    }
+}
+
+// 確保飮品價格能正確更新
+function updateDrinkPrice(id, clickedBtn) {
+    if(clickedBtn) { selectSingleBtn(clickedBtn); }
+    let item = findItemById(id);
+    if (!item || !item.prices) return;
+    
+    const sizeElem = document.getElementById(`size-${id}`);
+    const sizeSelected = sizeElem ? sizeElem.querySelector('.opt-btn.selected')?.innerText : '';
+    
+    let price = item.prices[sizeSelected] || Object.values(item.prices)[0] || 0;
+    const priceElement = document.getElementById(`price-${id}`);
+    if (priceElement) {
+        priceElement.innerText = `$${price}`;
+    }
+}
 
         function findItemById(id) {
             for(let cat of menu) {
