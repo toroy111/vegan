@@ -113,7 +113,7 @@
         .btn-move-custom { background-color: #64748b; color: white; border: none; padding: 7px 9px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; transition: 0.2s; }
         .btn-move-custom:hover { background-color: #475569; }
 
-        .btn-spec-move { background-color: #d97706; color: white; border: none; padding: 2px 5px; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .btn-spec-move { background-color: #d97706; color: white; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; }
         .btn-spec-move:hover { background-color: #b45309; }
 
         #back-to-top-btn {
@@ -332,6 +332,9 @@
         }
         const database = firebase.database();
         let firebaseListenerRef = null; 
+
+        // 本地暫存正在編輯但尚未點儲存的菜單資料
+        let currentAdminMenuCache = [];
 
         const defaultMenuData = [
             {
@@ -711,7 +714,8 @@
                     menu = defaultMenuData;
                     database.ref('menu').set(defaultMenuData);
                 }
-                renderAdminMenuUI(menu);
+                currentAdminMenuCache = JSON.parse(JSON.stringify(menu)); // 備份至本地暫存
+                renderAdminMenuUI(currentAdminMenuCache);
             });
         }
 
@@ -735,15 +739,15 @@
                                 </div>
                             `;
                         } else if (item.prices) {
-                            // 🌟 讓每個規格都可以向左或向右移動位置
                             const specEntries = Object.entries(item.prices);
                             specsHtml = specEntries.map(([k, v], sIndex) => {
-                                let moveLeftBtn = sIndex > 0 ? `<button class="btn-spec-move" onclick="moveItemSpec(${catIndex}, ${itemIndex}, ${sIndex}, -1)" title="向左移動">◀</button>` : '';
-                                let moveRightBtn = sIndex < specEntries.length - 1 ? `<button class="btn-spec-move" onclick="moveItemSpec(${catIndex}, ${itemIndex}, ${sIndex}, 1)" title="向右移動">▶</button>` : '';
+                                // 🌟 加上 event.stopPropagation() 防止點擊時觸發父層收合或跳開
+                                let moveLeftBtn = sIndex > 0 ? `<button class="btn-spec-move" onclick="event.stopPropagation(); moveItemSpecLocally(${catIndex}, ${itemIndex}, ${sIndex}, -1)" title="向左移動">◀</button>` : '';
+                                let moveRightBtn = sIndex < specEntries.length - 1 ? `<button class="btn-spec-move" onclick="event.stopPropagation(); moveItemSpecLocally(${catIndex}, ${itemIndex}, ${sIndex}, 1)" title="向右移動">▶</button>` : '';
                                 
                                 return `
-                                    <div class="price-input-group" id="spec-group-${catIndex}-${itemIndex}-${sIndex}" data-spec-key="${k}">
-                                        <div style="display:flex; gap:2px; margin-bottom:2px;">${moveLeftBtn}${moveRightBtn}</div>
+                                    <div class="price-input-group" id="spec-group-${catIndex}-${itemIndex}-${sIndex}">
+                                        <div style="display:flex; gap:2px; align-items:center;">${moveLeftBtn}${moveRightBtn}</div>
                                         <span>${k}: $</span>
                                         <input type="number" id="price-input-${catIndex}-${itemIndex}-${sIndex}" value="${v}">
                                     </div>
@@ -751,8 +755,8 @@
                             }).join('');
                         }
 
-                        let moveUpBtn = itemIndex > 0 ? `<button class="btn-move-custom" onclick="moveMenuItem(${catIndex}, ${itemIndex}, -1)" title="往上移動"><i class="fa-solid fa-arrow-up"></i></button>` : '';
-                        let moveDownBtn = itemIndex < cat.items.length - 1 ? `<button class="btn-move-custom" onclick="moveMenuItem(${catIndex}, ${itemIndex}, 1)" title="往下移動"><i class="fa-solid fa-arrow-down"></i></button>` : '';
+                        let moveUpBtn = itemIndex > 0 ? `<button class="btn-move-custom" onclick="event.stopPropagation(); moveMenuItemLocally(${catIndex}, ${itemIndex}, -1)" title="往上移動"><i class="fa-solid fa-arrow-up"></i></button>` : '';
+                        let moveDownBtn = itemIndex < cat.items.length - 1 ? `<button class="btn-move-custom" onclick="event.stopPropagation(); moveMenuItemLocally(${catIndex}, ${itemIndex}, 1)" title="往下移動"><i class="fa-solid fa-arrow-down"></i></button>` : '';
 
                         itemsHtml += `
                             <div class="admin-item-card-row" id="item-row-${catIndex}-${itemIndex}">
@@ -766,7 +770,7 @@
                                 <div class="admin-item-buttons">
                                     ${moveUpBtn}
                                     ${moveDownBtn}
-                                    <button class="btn-danger-custom" onclick="deleteMenuItem(${catIndex}, ${itemIndex})"><i class="fa-solid fa-trash"></i> 刪除</button>
+                                    <button class="btn-danger-custom" onclick="event.stopPropagation(); deleteMenuItemLocally(${catIndex}, ${itemIndex})"><i class="fa-solid fa-trash"></i> 刪除</button>
                                 </div>
                             </div>
                         `;
@@ -787,7 +791,7 @@
                                 <button class="btn-danger-custom" style="padding:5px 10px; font-size:11px;" onclick="deleteCategory(${catIndex})"><i class="fa-solid fa-trash-can"></i> 刪除分類</button>
                             </div>
                         </div>
-                        <div class="admin-cat-body" id="cat-body-${catIndex}">
+                        <div class="admin-cat-body open" id="cat-body-${catIndex}" style="display: block;">
                             ${itemsHtml}
                             <div style="text-align: right; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
                                 <button class="btn-success-custom" onclick="saveCategoryChanges(${catIndex})">
@@ -833,80 +837,52 @@
             });
         }
 
-        // 🌟 規格向左或向右移動邏輯
-        function moveItemSpec(catIndex, itemIndex, specIndex, direction) {
-            database.ref('menu').once('value').then(snapshot => {
-                let menu = snapshot.val() || defaultMenuData;
-                collectCategoryDataFromDOM(catIndex, menu);
+        // 🌟 本地規格左右移動：只在畫面暫存中調整並重新渲染，絕不直接重洗畫面或跳開
+        function moveItemSpecLocally(catIndex, itemIndex, specIndex, direction) {
+            collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
+            let item = currentAdminMenuCache[catIndex].items[itemIndex];
+            if (!item.prices) return;
 
-                let item = menu[catIndex].items[itemIndex];
-                if (!item.prices) return;
+            let entries = Object.entries(item.prices);
+            let targetIndex = specIndex + direction;
+            if (targetIndex < 0 || targetIndex >= entries.length) return;
 
-                let entries = Object.entries(item.prices);
-                let targetIndex = specIndex + direction;
-                if (targetIndex < 0 || targetIndex >= entries.length) return;
+            let temp = entries[specIndex];
+            entries[specIndex] = entries[targetIndex];
+            entries[targetIndex] = temp;
 
-                // 交換順序
-                let temp = entries[specIndex];
-                entries[specIndex] = entries[targetIndex];
-                entries[targetIndex] = temp;
-
-                // 重新組成有序物件
-                item.prices = Object.fromEntries(entries);
-
-                database.ref('menu').set(menu).then(() => {
-                    loadAdminMenuData();
-                    setTimeout(() => {
-                        const body = document.getElementById(`cat-body-${catIndex}`);
-                        const card = document.getElementById(`cat-card-${catIndex}`);
-                        const icon = card.querySelector(`.toggle-icon-${catIndex}`);
-                        const header = card.querySelector('.admin-cat-header');
-                        if(body) body.classList.add('open');
-                        if(header) header.classList.add('active');
-                        if(icon) icon.style.transform = 'rotate(90deg)';
-                    }, 50);
-                });
-            });
+            item.prices = Object.fromEntries(entries);
+            renderAdminMenuUI(currentAdminMenuCache);
         }
 
+        // 🌟 本地品項上下移動
+        function moveMenuItemLocally(catIndex, itemIndex, direction) {
+            collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
+            let targetItems = currentAdminMenuCache[catIndex].items;
+            let targetIndex = itemIndex + direction;
+            if (targetIndex < 0 || targetIndex >= targetItems.length) return;
+
+            let temp = targetItems[itemIndex];
+            targetItems[itemIndex] = targetItems[targetIndex];
+            targetItems[targetIndex] = temp;
+
+            renderAdminMenuUI(currentAdminMenuCache);
+        }
+
+        // 🌟 本地刪除品項
+        function deleteMenuItemLocally(catIndex, itemIndex) {
+            if (!confirm('確定要刪除這個品項嗎？')) return;
+            collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
+            currentAdminMenuCache[catIndex].items.splice(itemIndex, 1);
+            renderAdminMenuUI(currentAdminMenuCache);
+        }
+
+        // 點擊「儲存此分類變更」才真正寫入 Firebase
         function saveCategoryChanges(catIndex) {
-            database.ref('menu').once('value').then(snapshot => {
-                let menu = snapshot.val() || defaultMenuData;
-                collectCategoryDataFromDOM(catIndex, menu);
-
-                database.ref('menu').set(menu).then(() => {
-                    alert(`✅ 「${menu[catIndex].category}」分類修改已成功儲存！`);
-                    loadAdminMenuData();
-                });
-            });
-        }
-
-        function moveMenuItem(catIndex, itemIndex, direction) {
-            database.ref('menu').once('value').then(snapshot => {
-                let menu = snapshot.val() || defaultMenuData;
-                collectCategoryDataFromDOM(catIndex, menu);
-
-                let targetItems = menu[catIndex].items;
-                let targetIndex = itemIndex + direction;
-
-                if (targetIndex < 0 || targetIndex >= targetItems.length) return;
-
-                let temp = targetItems[itemIndex];
-                targetItems[itemIndex] = targetItems[targetIndex];
-                targetItems[targetIndex] = temp;
-
-                database.ref('menu').set(menu).then(() => {
-                    loadAdminMenuData();
-                    setTimeout(() => {
-                        const body = document.getElementById(`cat-body-${catIndex}`);
-                        const card = document.getElementById(`cat-card-${catIndex}`);
-                        const icon = card.querySelector(`.toggle-icon-${catIndex}`);
-                        const header = card.querySelector('.admin-cat-header');
-                        if(body) body.classList.add('open');
-                        if(header) header.classList.add('active');
-                        if(icon) icon.style.transform = 'rotate(90deg)';
-                    }, 50);
-                });
+            collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
+            database.ref('menu').set(currentAdminMenuCache).then(() => {
+                alert(`✅ 「${currentAdminMenuCache[catIndex].category}」分類修改已成功儲存至資料庫！`);
+                loadAdminMenuData();
             });
         }
 
@@ -916,14 +892,14 @@
             const icon = card.querySelector(`.toggle-icon-${catIndex}`);
             const header = card.querySelector('.admin-cat-header');
 
-            if (body.classList.contains('open')) {
-                body.classList.remove('open');
-                header.classList.remove('active');
-                icon.style.transform = 'rotate(0deg)';
-            } else {
-                body.classList.add('open');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
                 header.classList.add('active');
-                icon.style.transform = 'rotate(90deg)';
+                if(icon) icon.style.transform = 'rotate(90deg)';
+            } else {
+                body.style.display = 'none';
+                header.classList.remove('active');
+                if(icon) icon.style.transform = 'rotate(0deg)';
             }
         }
 
@@ -986,17 +962,8 @@
             });
         }
 
-        function deleteMenuItem(catIndex, itemIndex) {
-            if (!confirm('確定要刪除這個品項嗎？')) return;
-            database.ref('menu').once('value').then(snapshot => {
-                let menu = snapshot.val() || defaultMenuData;
-                menu[catIndex].items.splice(itemIndex, 1);
-                database.ref('menu').set(menu).then(() => { loadAdminMenuData(); });
-            });
-        }
-
         function resetMenuToDefault() {
-            if (confirm('⚠️️ 確定要將前台菜單全部重設為原始預設版本嗎？')) {
+            if (confirm('⚠ 確定要將前台菜單全部重設為原始預設版本嗎？')) {
                 database.ref('menu').set(defaultMenuData).then(() => {
                     alert('已成功回復預設菜單！');
                     loadAdminMenuData();
