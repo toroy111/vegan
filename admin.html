@@ -93,9 +93,12 @@
         
         .admin-item-info { flex: 1; }
         .admin-item-name { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-        .admin-specs-preview { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-        .admin-spec-pill { background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
-        .admin-spec-pill.highlight { background: #fff7ed; border-color: #fdba74; color: #c2410c; font-weight: bold; }
+        .admin-specs-preview { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        
+        /* ✨ 內聯價格輸入框樣式 */
+        .price-input-group { display: inline-flex; align-items: center; background: #fff7ed; border: 1px solid #fdba74; padding: 2px 6px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #c2410c; gap: 4px; }
+        .price-input-group input { width: 55px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 4px; font-size: 13px; text-align: center; font-weight: bold; color: #e11d48; outline: none; }
+        .price-input-group input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(230,126,34,0.2); }
 
         .admin-item-buttons { display: flex; gap: 8px; align-items: center; }
 
@@ -175,7 +178,7 @@
     <div id="main-admin-content">
         <header>
             <div>
-                <h1 style="font-size: 22px;">🍳 珍愛家素食早午餐 - 後台管理與接單系統 🔔</h1>
+                <h1 style="font-size: 22px;">🍳 珍愛家蔬食早午餐 - 後台管理與接單系統 🔔</h1>
                 <p style="font-size: 12px; opacity: 0.85; margin-top: 4px;">系統已成功連線 Firebase：新訂單即時通知、支援後台動態修改前台菜單與價格</p>
             </div>
             <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
@@ -244,9 +247,8 @@
 
     <div id="item-modal" class="modal-overlay">
         <div class="modal-card">
-            <h3 id="modal-title" style="margin-bottom: 18px; color: var(--primary-color); font-size: 20px;">新增 / 編輯菜單品項</h3>
+            <h3 id="modal-title" style="margin-bottom: 18px; color: var(--primary-color); font-size: 20px;">新增菜單品項</h3>
             <input type="hidden" id="edit-item-cat-index">
-            <input type="hidden" id="edit-item-index">
             
             <div class="form-group">
                 <label>選擇所屬分類：</label>
@@ -666,7 +668,7 @@
         }
 
         function clearAllOrders() {
-            if (confirm('⚠️ 確定要清空雲端資料庫內的所有訂單紀錄嗎？')) {
+            if (confirm('⚠️️ 確定要清空雲端資料庫內的所有訂單紀錄嗎？')) {
                 database.ref('orders').remove().then(() => alert('🧹 訂單已清空！'));
             }
         }
@@ -724,19 +726,31 @@
                     cat.items.forEach((item, itemIndex) => {
                         let specsHtml = '';
                         if (item.price !== undefined) {
-                            specsHtml = `<span class="admin-spec-pill highlight">固定價格: $${item.price}</span>`;
+                            specsHtml = `
+                                <div class="price-input-group">
+                                    固定價格: $
+                                    <input type="number" id="price-input-${catIndex}-${itemIndex}" value="${item.price}" data-type="single">
+                                </div>
+                            `;
                         } else if (item.prices) {
-                            specsHtml = Object.entries(item.prices).map(([k, v]) => `<span class="admin-spec-pill">${k}: <b style="color:#e11d48;">$${v}</b></span>`).join('');
+                            specsHtml = Object.entries(item.prices).map(([k, v], pIndex) => `
+                                <div class="price-input-group">
+                                    ${k}: $
+                                    <input type="number" id="price-input-${catIndex}-${itemIndex}-${pIndex}" value="${v}" data-type="multi" data-key="${k}">
+                                </div>
+                            `).join('');
                         }
 
                         itemsHtml += `
-                            <div class="admin-item-card-row">
+                            <div class="admin-item-card-row" id="item-row-${catIndex}-${itemIndex}">
                                 <div class="admin-item-info">
-                                    <div class="admin-item-name"><i class="fa-solid fa-utensils" style="font-size:13px; color:#e67e22;"></i> ${item.name}</div>
+                                    <div class="admin-item-name">
+                                        <i class="fa-solid fa-utensils" style="font-size:13px; color:#e67e22;"></i> 
+                                        <input type="text" id="name-input-${catIndex}-${itemIndex}" value="${item.name}" style="border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 6px; font-size: 15px; font-weight: bold; width: 160px; outline: none;">
+                                    </div>
                                     <div class="admin-specs-preview">${specsHtml}</div>
                                 </div>
                                 <div class="admin-item-buttons">
-                                    <button class="btn-warning-custom" onclick="openEditItemModal(${catIndex}, ${itemIndex})"><i class="fa-solid fa-pen"></i> 編輯</button>
                                     <button class="btn-danger-custom" onclick="deleteMenuItem(${catIndex}, ${itemIndex})"><i class="fa-solid fa-trash"></i> 刪除</button>
                                 </div>
                             </div>
@@ -760,9 +774,52 @@
                         </div>
                         <div class="admin-cat-body" id="cat-body-${catIndex}">
                             ${itemsHtml}
+                            <div style="text-align: right; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
+                                <button class="btn-success-custom" onclick="saveCategoryChanges(${catIndex})">
+                                    <i class="fa-solid fa-floppy-disk"></i> 💾 儲存「${cat.category}」變更
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
+            });
+        }
+
+        // ✨ 儲存特定分類下的所有價格與品項名稱變更
+        function saveCategoryChanges(catIndex) {
+            database.ref('menu').once('value').then(snapshot => {
+                let menu = snapshot.val() || defaultMenuData;
+                let targetCat = menu[catIndex];
+
+                if (!targetCat.items) return;
+
+                targetCat.items.forEach((item, itemIndex) => {
+                    // 抓取修改後的品項名稱
+                    const nameInput = document.getElementById(`name-input-${catIndex}-${itemIndex}`);
+                    if (nameInput) {
+                        item.name = nameInput.value.trim() || item.name;
+                    }
+
+                    // 抓取修改後的價格
+                    if (item.price !== undefined) {
+                        const priceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}`);
+                        if (priceInput) {
+                            item.price = parseInt(priceInput.value) || 0;
+                        }
+                    } else if (item.prices) {
+                        Object.keys(item.prices).forEach((key, pIndex) => {
+                            const multiPriceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}-${pIndex}`);
+                            if (multiPriceInput) {
+                                item.prices[key] = parseInt(multiPriceInput.value) || 0;
+                            }
+                        });
+                    }
+                });
+
+                database.ref('menu').set(menu).then(() => {
+                    alert(`✅ 「${targetCat.category}」分類修改已成功儲存！`);
+                    loadAdminMenuData();
+                });
             });
         }
 
@@ -803,9 +860,7 @@
         }
 
         function openAddItemModal() {
-            document.getElementById('modal-title').innerText = "新增菜單品項";
             document.getElementById('edit-item-cat-index').value = "";
-            document.getElementById('edit-item-index').value = "";
             document.getElementById('item-modal-name').value = "";
             document.getElementById('item-modal-price').value = "30";
             document.getElementById('item-modal-prices-json').value = "";
@@ -814,34 +869,10 @@
             document.getElementById('item-modal').style.display = 'flex';
         }
 
-        function openEditItemModal(catIndex, itemIndex) {
-            database.ref('menu').once('value').then(snapshot => {
-                let menu = snapshot.val() || defaultMenuData;
-                let item = menu[catIndex].items[itemIndex];
-                document.getElementById('modal-title').innerText = "編輯菜單品項";
-                document.getElementById('edit-item-cat-index').value = catIndex;
-                document.getElementById('edit-item-index').value = itemIndex;
-                document.getElementById('item-modal-category').value = catIndex;
-                document.getElementById('item-modal-name').value = item.name;
-
-                if (item.price !== undefined) {
-                    document.getElementById('item-modal-price').value = item.price;
-                    document.getElementById('group-single-price').style.display = "block";
-                    document.getElementById('group-prices-json').style.display = "none";
-                } else if (item.prices) {
-                    document.getElementById('item-modal-prices-json').value = JSON.stringify(item.prices, null, 2);
-                    document.getElementById('group-single-price').style.display = "none";
-                    document.getElementById('group-prices-json').style.display = "block";
-                }
-                document.getElementById('item-modal').style.display = 'flex';
-            });
-        }
-
         function closeItemModal() { document.getElementById('item-modal').style.display = 'none'; }
 
         function saveItemData() {
             const catIndex = parseInt(document.getElementById('item-modal-category').value);
-            const itemIndexVal = document.getElementById('edit-item-index').value;
             const name = document.getElementById('item-modal-name').value.trim();
             if (!name) { alert('請填寫品項名稱！'); return; }
 
@@ -858,16 +889,8 @@
                     newItemObj.price = parseInt(document.getElementById('item-modal-price').value) || 30;
                 }
 
-                if (itemIndexVal === "") {
-                    if (!targetCat.items) targetCat.items = [];
-                    targetCat.items.push(newItemObj);
-                } else {
-                    let oldItem = targetCat.items[parseInt(itemIndexVal)];
-                    newItemObj.id = oldItem.id;
-                    if (oldItem.types) newItemObj.types = oldItem.types;
-                    if (oldItem.hasEggOpt) newItemObj.hasEggOpt = oldItem.hasEggOpt;
-                    targetCat.items[parseInt(itemIndexVal)] = newItemObj;
-                }
+                if (!targetCat.items) targetCat.items = [];
+                targetCat.items.push(newItemObj);
 
                 database.ref('menu').set(menu).then(() => {
                     closeItemModal();
