@@ -95,8 +95,8 @@
         .admin-item-name { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
         .admin-specs-preview { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         
-        .price-input-group { display: inline-flex; align-items: center; background: #fff7ed; border: 1px solid #fdba74; padding: 2px 6px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #c2410c; gap: 4px; }
-        .price-input-group input { width: 55px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 4px; font-size: 13px; text-align: center; font-weight: bold; color: #e11d48; outline: none; }
+        .price-input-group { display: inline-flex; align-items: center; background: #fff7ed; border: 1px solid #fdba74; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #c2410c; gap: 4px; }
+        .price-input-group input { width: 50px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 4px; font-size: 13px; text-align: center; font-weight: bold; color: #e11d48; outline: none; }
         .price-input-group input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(230,126,34,0.2); }
 
         .admin-item-buttons { display: flex; gap: 6px; align-items: center; }
@@ -112,6 +112,9 @@
 
         .btn-move-custom { background-color: #64748b; color: white; border: none; padding: 7px 9px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; transition: 0.2s; }
         .btn-move-custom:hover { background-color: #475569; }
+
+        .btn-spec-move { background-color: #d97706; color: white; border: none; padding: 2px 5px; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .btn-spec-move:hover { background-color: #b45309; }
 
         #back-to-top-btn {
             position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px;
@@ -667,7 +670,7 @@
         }
 
         function clearAllOrders() {
-            if (confirm('⚠️️ 確定要清空雲端資料庫內的所有訂單紀錄嗎？')) {
+            if (confirm('⚠ 確定要清空雲端資料庫內的所有訂單紀錄嗎？')) {
                 database.ref('orders').remove().then(() => alert('🧹 訂單已清空！'));
             }
         }
@@ -712,120 +715,160 @@
             });
         }
 
-        // 【後台修改區塊】請替換 admin.html 中的 renderAdminMenuUI 函數內的對應程式碼
-function renderAdminMenuUI(menu) {
-    const container = document.getElementById('admin-menu-container');
-    const categorySelect = document.getElementById('item-modal-category');
-    container.innerHTML = '';
-    categorySelect.innerHTML = '';
+        function renderAdminMenuUI(menu) {
+            const container = document.getElementById('admin-menu-container');
+            const categorySelect = document.getElementById('item-modal-category');
+            container.innerHTML = '';
+            categorySelect.innerHTML = '';
 
-    menu.forEach((cat, catIndex) => {
-        categorySelect.innerHTML += `<option value="${catIndex}">${cat.category}</option>`;
-        let itemsHtml = '';
-        if (cat.items && cat.items.length > 0) {
-            cat.items.forEach((item, itemIndex) => {
-                let specsHtml = '';
-                if (item.price !== undefined) {
-                    specsHtml = `
-                        <div class="price-input-group">
-                            固定價格: $
-                            <input type="number" id="price-input-${catIndex}-${itemIndex}" value="${item.price}">
-                        </div>
-                    `;
-                } else if (item.prices) {
-                    specsHtml = Object.entries(item.prices).map(([k, v], pIndex) => `
-                        <div class="price-input-group">
-                            ${k}: $
-                            <input type="number" id="price-input-${catIndex}-${itemIndex}-${pIndex}" value="${v}">
-                        </div>
-                    `).join('');
+            menu.forEach((cat, catIndex) => {
+                categorySelect.innerHTML += `<option value="${catIndex}">${cat.category}</option>`;
+                let itemsHtml = '';
+                if (cat.items && cat.items.length > 0) {
+                    cat.items.forEach((item, itemIndex) => {
+                        let specsHtml = '';
+                        if (item.price !== undefined) {
+                            specsHtml = `
+                                <div class="price-input-group">
+                                    固定價格: $
+                                    <input type="number" id="price-input-${catIndex}-${itemIndex}" value="${item.price}">
+                                </div>
+                            `;
+                        } else if (item.prices) {
+                            // 🌟 讓每個規格都可以向左或向右移動位置
+                            const specEntries = Object.entries(item.prices);
+                            specsHtml = specEntries.map(([k, v], sIndex) => {
+                                let moveLeftBtn = sIndex > 0 ? `<button class="btn-spec-move" onclick="moveItemSpec(${catIndex}, ${itemIndex}, ${sIndex}, -1)" title="向左移動">◀</button>` : '';
+                                let moveRightBtn = sIndex < specEntries.length - 1 ? `<button class="btn-spec-move" onclick="moveItemSpec(${catIndex}, ${itemIndex}, ${sIndex}, 1)" title="向右移動">▶</button>` : '';
+                                
+                                return `
+                                    <div class="price-input-group" id="spec-group-${catIndex}-${itemIndex}-${sIndex}" data-spec-key="${k}">
+                                        <div style="display:flex; gap:2px; margin-bottom:2px;">${moveLeftBtn}${moveRightBtn}</div>
+                                        <span>${k}: $</span>
+                                        <input type="number" id="price-input-${catIndex}-${itemIndex}-${sIndex}" value="${v}">
+                                    </div>
+                                `;
+                            }).join('');
+                        }
+
+                        let moveUpBtn = itemIndex > 0 ? `<button class="btn-move-custom" onclick="moveMenuItem(${catIndex}, ${itemIndex}, -1)" title="往上移動"><i class="fa-solid fa-arrow-up"></i></button>` : '';
+                        let moveDownBtn = itemIndex < cat.items.length - 1 ? `<button class="btn-move-custom" onclick="moveMenuItem(${catIndex}, ${itemIndex}, 1)" title="往下移動"><i class="fa-solid fa-arrow-down"></i></button>` : '';
+
+                        itemsHtml += `
+                            <div class="admin-item-card-row" id="item-row-${catIndex}-${itemIndex}">
+                                <div class="admin-item-info">
+                                    <div class="admin-item-name">
+                                        <i class="fa-solid fa-utensils" style="font-size:13px; color:#e67e22;"></i> 
+                                        <input type="text" id="name-input-${catIndex}-${itemIndex}" value="${item.name}" style="border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 6px; font-size: 15px; font-weight: bold; width: 160px; outline: none;">
+                                    </div>
+                                    <div class="admin-specs-preview">${specsHtml}</div>
+                                </div>
+                                <div class="admin-item-buttons">
+                                    ${moveUpBtn}
+                                    ${moveDownBtn}
+                                    <button class="btn-danger-custom" onclick="deleteMenuItem(${catIndex}, ${itemIndex})"><i class="fa-solid fa-trash"></i> 刪除</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    itemsHtml = `<p style="color:#aaa; padding:15px; font-size:13px; text-align:center;">此分類尚無品項</p>`;
                 }
 
-                let moveUpBtn = itemIndex > 0 ? `<button class="btn-move-custom" onclick="moveMenuItem(${catIndex}, ${itemIndex}, -1)" title="往上移動"><i class="fa-solid fa-arrow-up"></i></button>` : '';
-                let moveDownBtn = itemIndex < cat.items.length - 1 ? `<button class="btn-move-custom" onclick="moveMenuItem(${catIndex}, ${itemIndex}, 1)" title="往下移動"><i class="fa-solid fa-arrow-down"></i></button>` : '';
-
-                itemsHtml += `
-                    <div class="admin-item-card-row" id="item-row-${catIndex}-${itemIndex}">
-                        <div class="admin-item-info">
-                            <div class="admin-item-name">
-                                <i class="fa-solid fa-utensils" style="font-size:13px; color:#e67e22;"></i> 
-                                <input type="text" id="name-input-${catIndex}-${itemIndex}" value="${item.name}" style="border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 6px; font-size: 15px; font-weight: bold; width: 160px; outline: none;">
+                container.innerHTML += `
+                    <div class="admin-cat-card" id="cat-card-${catIndex}">
+                        <div class="admin-cat-header" onclick="toggleAdminCategory(${catIndex})">
+                            <div class="admin-cat-title-area" onclick="event.stopPropagation()">
+                                <i class="fa-solid fa-chevron-right toggle-icon-${catIndex}" style="transition: transform 0.2s; font-size: 13px; color: #64748b;"></i>
+                                <input type="text" id="cat-name-input-${catIndex}" value="${cat.category}" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 15px; font-weight: bold; color: #1e293b; width: 280px; background: #fff; outline: none;" placeholder="輸入分類名稱">
+                                <span style="font-size:12px; color:#64748b; font-weight:normal; background:#e2e8f0; padding:2px 8px; border-radius:10px;">${cat.items ? cat.items.length : 0} 項</span>
                             </div>
-                            <div class="admin-specs-preview">${specsHtml}</div>
+                            <div class="admin-cat-actions" onclick="event.stopPropagation()">
+                                <button class="btn-danger-custom" style="padding:5px 10px; font-size:11px;" onclick="deleteCategory(${catIndex})"><i class="fa-solid fa-trash-can"></i> 刪除分類</button>
+                            </div>
                         </div>
-                        <div class="admin-item-buttons">
-                            ${moveUpBtn}
-                            ${moveDownBtn}
-                            <button class="btn-danger-custom" onclick="deleteMenuItem(${catIndex}, ${itemIndex})"><i class="fa-solid fa-trash"></i> 刪除</button>
+                        <div class="admin-cat-body" id="cat-body-${catIndex}">
+                            ${itemsHtml}
+                            <div style="text-align: right; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
+                                <button class="btn-success-custom" onclick="saveCategoryChanges(${catIndex})">
+                                    <i class="fa-solid fa-floppy-disk"></i> 💾 儲存此分類名稱與所有品項變更
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
             });
-        } else {
-            itemsHtml = `<p style="color:#aaa; padding:15px; font-size:13px; text-align:center;">此分類尚無品項</p>`;
         }
 
-        // 🌟 新增：讓分類標題變成可直接編輯的 Input 輸入框，並同步儲存分類名稱與品項
-        container.innerHTML += `
-            <div class="admin-cat-card" id="cat-card-${catIndex}">
-                <div class="admin-cat-header" onclick="toggleAdminCategory(${catIndex})">
-                    <div class="admin-cat-title-area" onclick="event.stopPropagation()">
-                        <i class="fa-solid fa-chevron-right toggle-icon-${catIndex}" style="transition: transform 0.2s; font-size: 13px; color: #64748b;"></i>
-                        <input type="text" id="cat-name-input-${catIndex}" value="${cat.category}" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 15px; font-weight: bold; color: #1e293b; width: 280px; background: #fff; outline: none;" placeholder="輸入分類名稱">
-                        <span style="font-size:12px; color:#64748b; font-weight:normal; background:#e2e8f0; padding:2px 8px; border-radius:10px;">${cat.items ? cat.items.length : 0} 項</span>
-                    </div>
-                    <div class="admin-cat-actions" onclick="event.stopPropagation()">
-                        <button class="btn-danger-custom" style="padding:5px 10px; font-size:11px;" onclick="deleteCategory(${catIndex})"><i class="fa-solid fa-trash-can"></i> 刪除分類</button>
-                    </div>
-                </div>
-                <div class="admin-cat-body" id="cat-body-${catIndex}">
-                    ${itemsHtml}
-                    <div style="text-align: right; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
-                        <button class="btn-success-custom" onclick="saveCategoryChanges(${catIndex})">
-                            <i class="fa-solid fa-floppy-disk"></i> 💾 儲存此分類名稱與所有品項變更
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-}
-
-// 🌟 新增：在儲存時一併抓取並更新分類名稱 (category)
-function collectCategoryDataFromDOM(catIndex, menu) {
-    let targetCat = menu[catIndex];
-    
-    // 抓取分類名稱輸入框的值
-    const catNameInput = document.getElementById(`cat-name-input-${catIndex}`);
-    if (catNameInput) {
-        targetCat.category = catNameInput.value.trim() || targetCat.category;
-    }
-
-    if (!targetCat.items) return;
-
-    targetCat.items.forEach((item, itemIndex) => {
-        const nameInput = document.getElementById(`name-input-${catIndex}-${itemIndex}`);
-        if (nameInput) {
-            item.name = nameInput.value.trim() || item.name;
-        }
-
-        if (item.price !== undefined) {
-            const priceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}`);
-            if (priceInput) {
-                item.price = parseInt(priceInput.value) || 0;
+        function collectCategoryDataFromDOM(catIndex, menu) {
+            let targetCat = menu[catIndex];
+            const catNameInput = document.getElementById(`cat-name-input-${catIndex}`);
+            if (catNameInput) {
+                targetCat.category = catNameInput.value.trim() || targetCat.category;
             }
-        } else if (item.prices) {
-            Object.keys(item.prices).forEach((key, pIndex) => {
-                const multiPriceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}-${pIndex}`);
-                if (multiPriceInput) {
-                    item.prices[key] = parseInt(multiPriceInput.value) || 0;
+
+            if (!targetCat.items) return;
+
+            targetCat.items.forEach((item, itemIndex) => {
+                const nameInput = document.getElementById(`name-input-${catIndex}-${itemIndex}`);
+                if (nameInput) {
+                    item.name = nameInput.value.trim() || item.name;
+                }
+
+                if (item.price !== undefined) {
+                    const priceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}`);
+                    if (priceInput) {
+                        item.price = parseInt(priceInput.value) || 0;
+                    }
+                } else if (item.prices) {
+                    let newPricesObj = {};
+                    const specKeys = Object.keys(item.prices);
+                    specKeys.forEach((key, sIndex) => {
+                        const multiPriceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}-${sIndex}`);
+                        let val = multiPriceInput ? (parseInt(multiPriceInput.value) || 0) : item.prices[key];
+                        newPricesObj[key] = val;
+                    });
+                    item.prices = newPricesObj;
                 }
             });
         }
-    });
-}
 
-        // 儲存特定分類變更
+        // 🌟 規格向左或向右移動邏輯
+        function moveItemSpec(catIndex, itemIndex, specIndex, direction) {
+            database.ref('menu').once('value').then(snapshot => {
+                let menu = snapshot.val() || defaultMenuData;
+                collectCategoryDataFromDOM(catIndex, menu);
+
+                let item = menu[catIndex].items[itemIndex];
+                if (!item.prices) return;
+
+                let entries = Object.entries(item.prices);
+                let targetIndex = specIndex + direction;
+                if (targetIndex < 0 || targetIndex >= entries.length) return;
+
+                // 交換順序
+                let temp = entries[specIndex];
+                entries[specIndex] = entries[targetIndex];
+                entries[targetIndex] = temp;
+
+                // 重新組成有序物件
+                item.prices = Object.fromEntries(entries);
+
+                database.ref('menu').set(menu).then(() => {
+                    loadAdminMenuData();
+                    setTimeout(() => {
+                        const body = document.getElementById(`cat-body-${catIndex}`);
+                        const card = document.getElementById(`cat-card-${catIndex}`);
+                        const icon = card.querySelector(`.toggle-icon-${catIndex}`);
+                        const header = card.querySelector('.admin-cat-header');
+                        if(body) body.classList.add('open');
+                        if(header) header.classList.add('active');
+                        if(icon) icon.style.transform = 'rotate(90deg)';
+                    }, 50);
+                });
+            });
+        }
+
         function saveCategoryChanges(catIndex) {
             database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val() || defaultMenuData;
@@ -838,11 +881,9 @@ function collectCategoryDataFromDOM(catIndex, menu) {
             });
         }
 
-        // 上移或下移品項位置
         function moveMenuItem(catIndex, itemIndex, direction) {
             database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val() || defaultMenuData;
-                // 先把畫面上還沒儲存的更改抓下來，避免移動時資料跑掉
                 collectCategoryDataFromDOM(catIndex, menu);
 
                 let targetItems = menu[catIndex].items;
@@ -850,14 +891,12 @@ function collectCategoryDataFromDOM(catIndex, menu) {
 
                 if (targetIndex < 0 || targetIndex >= targetItems.length) return;
 
-                // 交換位置
                 let temp = targetItems[itemIndex];
                 targetItems[itemIndex] = targetItems[targetIndex];
                 targetItems[targetIndex] = temp;
 
                 database.ref('menu').set(menu).then(() => {
                     loadAdminMenuData();
-                    // 保持原本展開的狀態
                     setTimeout(() => {
                         const body = document.getElementById(`cat-body-${catIndex}`);
                         const card = document.getElementById(`cat-card-${catIndex}`);
@@ -957,7 +996,7 @@ function collectCategoryDataFromDOM(catIndex, menu) {
         }
 
         function resetMenuToDefault() {
-            if (confirm('⚠️ 確定要將前台菜單全部重設為原始預設版本嗎？')) {
+            if (confirm('⚠️️ 確定要將前台菜單全部重設為原始預設版本嗎？')) {
                 database.ref('menu').set(defaultMenuData).then(() => {
                     alert('已成功回復預設菜單！');
                     loadAdminMenuData();
