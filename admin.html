@@ -332,7 +332,6 @@
         const database = firebase.database();
         let firebaseListenerRef = null; 
 
-        // 本地暫存正在編輯但尚未點儲存的菜單資料
         let currentAdminMenuCache = [];
 
         const defaultMenuData = [
@@ -706,12 +705,14 @@
             });
         }
 
+        // 🌟 初始化讀取菜單：若 Firebase 無資料則自動寫入預設菜單
         function loadAdminMenuData() {
-            database.ref('menu').once('value').then(snapshot => {
+            const menuRef = database.ref('menu');
+            menuRef.once('value').then(snapshot => {
                 let menu = snapshot.val();
                 if (!menu) {
                     menu = defaultMenuData;
-                    database.ref('menu').set(defaultMenuData);
+                    menuRef.set(defaultMenuData);
                 }
                 currentAdminMenuCache = JSON.parse(JSON.stringify(menu));
                 renderAdminMenuUI(currentAdminMenuCache);
@@ -789,7 +790,6 @@
                                 <button class="btn-danger-custom" style="padding:5px 10px; font-size:11px;" onclick="deleteCategory(${catIndex})"><i class="fa-solid fa-trash-can"></i> 刪除分類</button>
                             </div>
                         </div>
-                        <!-- 🌟 預設保持 display: none，進入頁面時全部收合，不會自動展開 -->
                         <div class="admin-cat-body" id="cat-body-${catIndex}" style="display: none;">
                             ${itemsHtml}
                             <div style="text-align: right; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
@@ -836,46 +836,36 @@
             });
         }
 
-        // 🌟 本地規格左右移動：保持當前分類與捲動位置，絕不自動收合
         function moveItemSpecLocally(catIndex, itemIndex, specIndex, direction) {
-        collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
-        let item = currentAdminMenuCache[catIndex].items[itemIndex];
-        if (!item.prices) return;
+            collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
+            let item = currentAdminMenuCache[catIndex].items[itemIndex];
+            if (!item.prices) return;
 
-        let entries = Object.entries(item.prices);
-        let targetIndex = specIndex + direction;
-        if (targetIndex < 0 || targetIndex >= entries.length) return;
+            let entries = Object.entries(item.prices);
+            let targetIndex = specIndex + direction;
+            if (targetIndex < 0 || targetIndex >= entries.length) return;
 
-        let temp = entries[specIndex];
-        entries[specIndex] = entries[targetIndex];
-        entries[targetIndex] = temp;
+            let temp = entries[specIndex];
+            entries[specIndex] = entries[targetIndex];
+            entries[targetIndex] = temp;
 
-        item.prices = Object.fromEntries(entries);
-        
-        // 自動儲存至 Firebase 雲端，確保重新整理不會跑掉，前台也會同步
-        database.ref('menu').set(currentAdminMenuCache).then(() => {
+            item.prices = Object.fromEntries(entries);
             renderAdminMenuUIKeepOpen(catIndex);
-        });
-    }
+        }
 
-    // 🌟 修正：品項上下移動後，自動寫入 Firebase 雲端資料庫
-    function moveMenuItemLocally(catIndex, itemIndex, direction) {
-        collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
-        let targetItems = currentAdminMenuCache[catIndex].items;
-        let targetIndex = itemIndex + direction;
-        if (targetIndex < 0 || targetIndex >= targetItems.length) return;
+        function moveMenuItemLocally(catIndex, itemIndex, direction) {
+            collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
+            let targetItems = currentAdminMenuCache[catIndex].items;
+            let targetIndex = itemIndex + direction;
+            if (targetIndex < 0 || targetIndex >= targetItems.length) return;
 
-        let temp = targetItems[itemIndex];
-        targetItems[itemIndex] = targetItems[targetIndex];
-        targetItems[targetIndex] = temp;
+            let temp = targetItems[itemIndex];
+            targetItems[itemIndex] = targetItems[targetIndex];
+            targetItems[targetIndex] = temp;
 
-        // 自動儲存至 Firebase 雲端
-        database.ref('menu').set(currentAdminMenuCache).then(() => {
             renderAdminMenuUIKeepOpen(catIndex);
-        });
-    }
+        }
 
-        // 🌟 本地刪除品項
         function deleteMenuItemLocally(catIndex, itemIndex) {
             if (!confirm('確定要刪除這個品項嗎？')) return;
             collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
@@ -883,7 +873,6 @@
             renderAdminMenuUIKeepOpen(catIndex);
         }
 
-        // 輔助函數：重新渲染畫面但精準保留目前正在編輯的那一格展開狀態
         function renderAdminMenuUIKeepOpen(catIndex) {
             renderAdminMenuUI(currentAdminMenuCache);
             const body = document.getElementById(`cat-body-${catIndex}`);
@@ -896,11 +885,10 @@
             }
         }
 
-        // 點擊「儲存此分類變更」才真正寫入 Firebase
         function saveCategoryChanges(catIndex) {
             collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
             database.ref('menu').set(currentAdminMenuCache).then(() => {
-                alert(`✅ 「${currentAdminMenuCache[catIndex].category}」分類修改已成功儲存至資料庫！`);
+                alert(`✅ 「${currentAdminMenuCache[catIndex].category}」分類修改已成功儲存至雲端，前台已同步更新！`);
                 loadAdminMenuData();
             });
         }
@@ -928,7 +916,10 @@
             database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val() || defaultMenuData;
                 menu.push({ category: catName.trim(), items: [] });
-                database.ref('menu').set(menu).then(() => { loadAdminMenuData(); });
+                database.ref('menu').set(menu).then(() => { 
+                    alert('✨ 新分類已新增！');
+                    loadAdminMenuData(); 
+                });
             });
         }
 
@@ -975,6 +966,7 @@
                 targetCat.items.push(newItemObj);
 
                 database.ref('menu').set(menu).then(() => {
+                    alert('🎉 新產品已成功新增並同步至前台！');
                     closeItemModal();
                     loadAdminMenuData();
                 });
