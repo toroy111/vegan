@@ -3,51 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>珍愛家素食早午餐 - 後台管理與接單系統</title>
+    <title>珍愛家蔬食早午餐 - 後台管理與接單系統</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary-color: #2c3e50; --accent-color: #e67e22; --success-color: #27ae60; --bg-color: #ecf0f1; }
+        :root { --primary-color: #2c3e50; --accent-color: #e67e22; --success-color: #27ae60; --bg-color: #f4f6f8; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
         
-        #main-admin-content { display: none; background-color: var(--bg-color); padding: 20px; color: #333; min-height: 100vh; }
+        #main-admin-content { display: none; background-color: var(--bg-color); padding: 25px; color: #333; min-height: 100vh; position: relative; }
         
-        header { background: var(--primary-color); color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        header { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px 25px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
-        .admin-nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { background: #bdc3c7; color: #2c3e50; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        .tab-btn.active { background: var(--accent-color); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        .admin-nav-tabs { display: flex; gap: 12px; margin-bottom: 25px; }
+        .tab-btn { background: #e2e8f0; color: #4a5568; border: none; padding: 12px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        .tab-btn:hover { background: #cbd5e0; }
+        .tab-btn.active { background: var(--accent-color); color: white; box-shadow: 0 4px 10px rgba(230,126,34,0.3); }
 
         .tab-content-panel { display: none; }
         .tab-content-panel.active { display: block; }
 
         .dashboard { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { margin-bottom: 15px; font-size: 18px; border-left: 4px solid var(--accent-color); padding-left: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { margin-bottom: 20px; font-size: 18px; border-left: 5px solid var(--accent-color); padding-left: 12px; display: flex; justify-content: space-between; align-items: center; color: #2c3e50; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; table-layout: fixed; }
-        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; word-wrap: break-word; }
-        th { background-color: #f8f9fa; color: #555; font-weight: bold; }
+        th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #edf2f7; vertical-align: middle; word-wrap: break-word; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 600; font-size: 13px; }
         tr:hover { background-color: #fdfaf7; }
         
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; }
-        .status-new { background-color: #ffeaa7; color: #d63031; animation: blink 1.5s infinite; }
-        .status-done { background-color: #dff9fb; color: #27ae60; }
+        .status-badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .status-new { background-color: #fff1f2; color: #e11d48; animation: blink 1.5s infinite; border: 1px solid #fecdd3; }
+        .status-done { background-color: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
         
-        .action-btn { background-color: var(--success-color); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; white-space: nowrap; margin-bottom: 4px; display: inline-block; }
-        .action-btn:hover { background-color: #219653; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .btn-edit-order { background-color: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; white-space: nowrap; display: inline-block; }
-        .btn-edit-order:hover { background-color: #2980b9; }
+        .action-btn { background-color: var(--success-color); color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; white-space: nowrap; margin-bottom: 4px; display: inline-block; }
+        .action-btn:hover { background-color: #219653; box-shadow: 0 2px 5px rgba(39,174,96,0.3); }
+        .btn-edit-order { background-color: #3b82f6; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; white-space: nowrap; display: inline-block; }
+        .btn-edit-order:hover { background-color: #2563eb; }
 
-        .clear-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        .audio-btn { background-color: #34495e; color: #cbd5e0; border: 1px solid #455a64; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-        .logout-btn { background-color: #7f8c8d; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; margin-left: 10px; }
-        .logout-btn:hover { background-color: #95a5a6; }
+        .clear-btn { background-color: #ef4444; color: white; border: none; padding: 9px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
+        .clear-btn:hover { background-color: #dc2626; }
+        .audio-btn { background-color: #475569; color: #fff; border: none; padding: 9px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .audio-btn:hover { background-color: #334155; }
+        .logout-btn { background-color: #64748b; color: white; border: none; padding: 9px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; margin-left: 10px; transition: 0.2s; }
+        .logout-btn:hover { background-color: #475569; }
         
-        .audio-select { background-color: #34495e; color: #fff; border: 1px solid #455a64; padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; outline: none; margin-right: 8px; }
+        .audio-select { background-color: #334155; color: #fff; border: 1px solid #475569; padding: 9px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; outline: none; margin-right: 8px; }
         
-        .item-list-text { font-size: 14px; line-height: 1.5; color: #2c3e50; }
+        .item-list-text { font-size: 14px; line-height: 1.6; color: #2c3e50; }
         
-        .category-block { margin-bottom: 8px; background: #f8f9fa; border-radius: 6px; padding: 6px 10px; border-left: 4px solid #7f8c8d; }
+        .category-block { margin-bottom: 8px; background: #f8fafc; border-radius: 6px; padding: 8px 12px; border-left: 4px solid #94a3b8; }
         .cat-main { border-left-color: #e67e22; background: #fff9f5; }   
         .cat-egg { border-left-color: #f1c40f; background: #fffdf0; }     
         .cat-noodle { border-left-color: #9b59b6; background: #fbf6fc; } 
@@ -55,34 +58,86 @@
         .cat-snack { border-left-color: #3498db; background: #f5faff; }  
         .cat-toast { border-left-color: #e67e22; background: #fffcf9; }  
 
-        .category-title { font-size: 12px; font-weight: bold; color: #7f8c8d; margin-bottom: 4px; text-transform: uppercase; }
+        .category-title { font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 4px; text-transform: uppercase; }
         
-        .food-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 3px 0; border-bottom: 1px dashed #e2e8f0; }
+        .food-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px dashed #e2e8f0; }
         .food-row:last-child { border-bottom: none; }
-        .food-title { font-weight: bold; color: #2c3e50; }
+        .food-title { font-weight: bold; color: #1e293b; }
         
-        .spec-badge { background-color: #edf2f7; color: #4a5568; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #e2e8f0; }
-        .combo-badge { background-color: #e3faf2; color: #0ca678; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #96f2d7; }
-        .custom-badge { background-color: #fff4e6; color: #d9480f; padding: 1px 5px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #ffd8a8; }
+        .spec-badge { background-color: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #e2e8f0; }
+        .combo-badge { background-color: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #a7f3d0; }
+        .custom-badge { background-color: #fff7ed; color: #c2410c; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #ffedd5; }
         
-        .note-text { color: #c0392b; font-size: 13px; font-weight: bold; background-color: #fdf2f2; padding: 6px 10px; border-radius: 6px; border-left: 3px solid #e74c3c; word-break: break-all; }
-        .note-empty { color: #aaa; font-size: 13px; font-style: italic; }
+        .note-text { color: #dc2626; font-size: 13px; font-weight: bold; background-color: #fef2f2; padding: 8px 12px; border-radius: 8px; border-left: 3px solid #ef4444; word-break: break-all; }
+        .note-empty { color: #94a3b8; font-size: 13px; font-style: italic; }
         
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .menu-manage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .btn-primary-custom { background-color: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .btn-primary-custom:hover { background-color: #2980b9; }
-        .btn-danger-custom { background-color: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .btn-warning-custom { background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; margin-right: 5px; }
+        .menu-manage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        
+        /* 🎨 全新升級的前台風格菜單區塊與折疊設計 */
+        .admin-cat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; transition: 0.2s; }
+        .admin-cat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        
+        .admin-cat-header { background: #f8fafc; padding: 15px 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; border-bottom: 1px solid transparent; transition: background 0.2s; }
+        .admin-cat-header:hover { background: #f1f5f9; }
+        .admin-cat-header.active { border-bottom-color: #e2e8f0; background: #f8fafc; }
+        
+        .admin-cat-title-area { display: flex; align-items: center; gap: 10px; font-size: 16px; color: #1e293b; }
+        .admin-cat-actions { display: flex; align-items: center; gap: 10px; }
+        
+        .admin-cat-body { padding: 10px 20px; background: white; display: none; }
+        .admin-cat-body.open { display: block; }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
-        .modal-card { background: white; width: 500px; max-width: 90%; padding: 25px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #4a5568; }
-        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; }
-        .form-control:focus { border-color: var(--accent-color); }
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .admin-item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px dashed #f1f5f9; transition: background 0.15s; border-radius: 6px; }
+        .admin-item-row:hover { background-color: #fafbfc; padding-left: 14px; padding-right: 14px; }
+        .admin-item-row:last-child { border-bottom: none; }
+
+        .btn-primary-custom { background-color: #3b82f6; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary-custom:hover { background-color: #2563eb; box-shadow: 0 2px 8px rgba(59,130,246,0.3); }
+        
+        .btn-success-custom { background-color: #10b981; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-success-custom:hover { background-color: #059669; box-shadow: 0 2px 8px rgba(16,185,129,0.3); }
+
+        .btn-danger-custom { background-color: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-danger-custom:hover { background-color: #dc2626; }
+
+        .btn-warning-custom { background-color: #f59e0b; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; margin-right: 6px; }
+        .btn-warning-custom:hover { background-color: #d97706; }
+
+        /* 🚀 右下方至頂火箭圈圈按鈕 */
+        #back-to-top-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(234,88,12,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            z-index: 999;
+            transition: transform 0.2s, opacity 0.2s;
+            opacity: 0.9;
+        }
+        #back-to-top-btn:hover {
+            transform: translateY(-4px) scale(1.05);
+            opacity: 1;
+        }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-card { background: white; width: 500px; max-width: 90%; padding: 30px; border-radius: 16px; box-shadow: 0 20px 35px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #475569; }
+        .form-control { width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; }
+        .form-control:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(230,126,34,0.15); }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; }
 
         #login-screen-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -98,7 +153,8 @@
         .input-group i.left-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaaaaa; font-size: 16px; }
         .input-group i.eye-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #aaaaaa; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .login-input { width: 100%; padding: 14px 15px 14px 45px; border: 1px solid #e0e0e0; background-color: #f9f9f9; border-radius: 25px; font-size: 14px; color: #333; outline: none; box-sizing: border-box; }
-        .btn-submit-login { width: 100%; background: linear-gradient(to right, #2ec4b6, #0cbaba); color: white; border: none; padding: 14px; border-radius: 25px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; margin-bottom: 20px; }
+        .btn-submit-login { width: 100%; background: linear-gradient(to right, #2ec4b6, #0cbaba); color: white; border: none; padding: 14px; border-radius: 25px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; margin-bottom: 20px; transition: 0.2s; }
+        .btn-submit-login:hover { opacity: 0.9; }
         .login-footer-links { display: flex; justify-content: space-between; font-size: 12px; color: #888888; padding: 0 5px; }
         .login-footer-links a { text-decoration: none; color: #2ec4b6; font-weight: 500; cursor: pointer; }
         #error-msg-hint { color: #e74c3c; font-size: 13px; font-weight: bold; margin-bottom: 15px; display: none; }
@@ -130,18 +186,18 @@
     <div id="main-admin-content">
         <header>
             <div>
-                <h1 style="font-size: 22px;">🍳 珍愛家素食早午餐 - 後台管理與接單系統 🔔</h1>
-                <p style="font-size: 12px; opacity: 0.8; margin-top: 3px;">系統已成功連線 Firebase：新訂單即時通知、支援後台動態修改前台菜單與價格</p>
+                <h1 style="font-size: 22px;">🍳 珍愛家蔬食早午餐 - 後台管理與接單系統 🔔</h1>
+                <p style="font-size: 12px; opacity: 0.85; margin-top: 4px;">系統已成功連線 Firebase：新訂單即時通知、支援後台動態修改前台菜單與價格</p>
             </div>
-            <div style="display: flex; align-items: center;">
+            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <select id="audio-sound-type" class="audio-select" onchange="playDingDong()">
                     <option value="classic">🔊 音效：傳統叮咚二重奏</option>
                     <option value="crisp">🔊 音效：清脆高音雙響</option>
                     <option value="chord">🔊 音效：輕快活力和弦</option>
                     <option value="alert">🚨 音效：緊急快節奏警報</option>
                 </select>
-                <button class="audio-btn" onclick="playDingDong()">測試</button>
-                <button class="clear-btn" style="margin-left: 15px;" onclick="clearAllOrders()">🧹 清空歷史訂單</button>
+                <button class="audio-btn" onclick="playDingDong()">測試音效</button>
+                <button class="clear-btn" onclick="clearAllOrders()">🧹 清空歷史訂單</button>
                 <button class="logout-btn" onclick="logoutAdminSystem()">🚪 登出後台</button>
             </div>
         </header>
@@ -180,10 +236,10 @@
             <div class="card">
                 <div class="menu-manage-header">
                     <h2>📖 編輯前台類別、菜單品項與價格</h2>
-                    <div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn-primary-custom" onclick="openAddCategoryModal()"><i class="fa-solid fa-folder-plus"></i> 新增分類</button>
-                        <button class="btn-primary-custom" onclick="openAddItemModal()" style="background-color:#27ae60;"><i class="fa-solid fa-plus"></i> 新增菜單品項</button>
-                        <button class="btn-primary-custom" onclick="resetMenuToDefault()" style="background-color:#e74c3c;"><i class="fa-solid fa-rotate-left"></i> 回復預設菜單</button>
+                        <button class="btn-success-custom" onclick="openAddItemModal()"><i class="fa-solid fa-plus"></i> 新增菜單品項</button>
+                        <button class="btn-danger-custom" onclick="resetMenuToDefault()" style="padding: 9px 16px; font-size: 13px;"><i class="fa-solid fa-rotate-left"></i> 回復預設菜單</button>
                     </div>
                 </div>
                 <div id="admin-menu-container">
@@ -191,11 +247,16 @@
                 </div>
             </div>
         </div>
+
+        <!-- 🚀 右下方至頂火箭圈圈 -->
+        <button id="back-to-top-btn" onclick="scrollToTop()" title="回到頂部">
+            <i class="fa-solid fa-rocket"></i>
+        </button>
     </div>
 
     <div id="item-modal" class="modal-overlay">
         <div class="modal-card">
-            <h3 id="modal-title" style="margin-bottom: 15px; color: var(--primary-color);">新增 / 編輯菜單品項</h3>
+            <h3 id="modal-title" style="margin-bottom: 18px; color: var(--primary-color); font-size: 20px;">新增 / 編輯菜單品項</h3>
             <input type="hidden" id="edit-item-cat-index">
             <input type="hidden" id="edit-item-index">
             
@@ -209,7 +270,7 @@
             </div>
             <div class="form-group">
                 <label>價格設定模式說明：</label>
-                <p style="font-size: 12px; color: #666; background: #f8f9fa; padding: 8px; border-radius: 4px; line-height: 1.4;">
+                <p style="font-size: 12px; color: #666; background: #f8fafc; padding: 10px; border-radius: 6px; line-height: 1.5; border: 1px solid #e2e8f0;">
                     • <b>單一價格品項</b>：請在下方直接填寫固定價格。<br>
                     • <b>多規格/多價格品項</b>：請以 JSON 格式填寫，例如：<code>{"薄片": 20, "厚片": 25}</code>
                 </p>
@@ -220,19 +281,19 @@
             </div>
             <div class="form-group" id="group-prices-json" style="display:none;">
                 <label>多規格價格 (JSON 格式)：</label>
-                <textarea id="item-modal-prices-json" class="form-control" style="height: 80px;" placeholder='{"規格一": 30, "規格二": 45}'></textarea>
+                <textarea id="item-modal-prices-json" class="form-control" style="height: 90px;" placeholder='{"規格一": 30, "規格二": 45}'></textarea>
             </div>
             
             <div class="modal-buttons">
-                <button class="btn-primary-custom" style="background-color: #95a5a6;" onclick="closeItemModal()">取消</button>
-                <button class="btn-primary-custom" onclick="saveItemData()">儲存品項</button>
+                <button class="btn-primary-custom" style="background-color: #94a3b8;" onclick="closeItemModal()">取消</button>
+                <button class="btn-success-custom" onclick="saveItemData()">儲存品項</button>
             </div>
         </div>
     </div>
 
     <div id="edit-order-modal" class="modal-overlay">
         <div class="modal-card">
-            <h3 style="margin-bottom: 15px; color: var(--primary-color);">✏ 編輯現有訂單內容</h3>
+            <h3 style="margin-bottom: 18px; color: var(--primary-color); font-size: 20px;">✏ 編輯現有訂單內容</h3>
             <input type="hidden" id="edit-order-firebase-key">
             
             <div class="form-group">
@@ -241,7 +302,7 @@
             </div>
             <div class="form-group">
                 <label>點餐品項明細：</label>
-                <textarea id="edit-order-items" class="form-control" style="height: 100px;"></textarea>
+                <textarea id="edit-order-items" class="form-control" style="height: 110px;"></textarea>
             </div>
             <div class="form-group">
                 <label>總金額 ($)：</label>
@@ -253,8 +314,8 @@
             </div>
             
             <div class="modal-buttons">
-                <button class="btn-primary-custom" style="background-color: #95a5a6;" onclick="closeEditOrderModal()">取消</button>
-                <button class="btn-primary-custom" onclick="saveEditedOrderData()">確認修改</button>
+                <button class="btn-primary-custom" style="background-color: #94a3b8;" onclick="closeEditOrderModal()">取消</button>
+                <button class="btn-success-custom" onclick="saveEditedOrderData()">確認修改</button>
             </div>
         </div>
     </div>
@@ -460,6 +521,10 @@
             if (tabName === 'menu') loadAdminMenuData();
         }
 
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function playDingDong() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -589,7 +654,7 @@
             let html = '';
             orders.forEach(order => {
                 let statusClass = order.status === '已出餐' || order.status === '已完成' ? 'status-done' : 'status-new';
-                let actionButtonHtml = order.status === '已出餐' || order.status === '已完成' ? `<span style="color:#27ae60; font-size:13px; font-weight:bold;">★ 已完畢</span>` : `<button class="action-btn" onclick="updateOrderStatus('${order.firebaseKey}', '已出餐')">完成出餐 ✔</button>`;
+                let actionButtonHtml = order.status === '已出餐' || order.status === '已完成' ? `<span style="color:#16a34a; font-size:13px; font-weight:bold;">★ 已完畢</span>` : `<button class="action-btn" onclick="updateOrderStatus('${order.firebaseKey}', '已出餐')">完成出餐 ✔</button>`;
                 let noteHtml = (order.note && order.note !== '無') ? `<div class="note-text">📢 ${order.note}</div>` : `<div class="note-empty">無備註</div>`;
                 
                 html += `
@@ -599,9 +664,9 @@
                         <td><div style="font-size:13px;">📞 ${order.phone || '無'}</div><div style="font-size:12px; color:#10b981;">LINE: ${order.line || '無'}</div></td>
                         <td><div class="item-list-text">${formatItemsToCategorizedHtml(order.items)}</div></td>
                         <td>${noteHtml}</td>
-                        <td style="font-weight:bold; color:#d63031; font-size:16px;">$${order.total || 0}</td>
+                        <td style="font-weight:bold; color:#e11d48; font-size:16px;">$${order.total || 0}</td>
                         <td><span class="status-badge ${statusClass}">${order.status || '新訂單'}</span></td>
-                        <td>${actionButtonHtml}<br><button class="btn-edit-order" onclick="openEditOrderModal('${order.firebaseKey}')">編輯訂單</button></td>
+                        <td>${actionButtonHtml}<br><button class="btn-edit-order" style="margin-top:4px;" onclick="openEditOrderModal('${order.firebaseKey}')">編輯訂單</button></td>
                     </tr>
                 `;
             });
@@ -647,7 +712,7 @@
             });
         }
 
-        // 🌟 菜單與類別管理邏輯（含自動寫入預設菜單初始化）
+        // 🌟 菜單與類別管理邏輯（含摺疊與前台質感UI）
         function loadAdminMenuData() {
             database.ref('menuData').once('value').then(snapshot => {
                 let menu = snapshot.val();
@@ -672,29 +737,55 @@
                     cat.items.forEach((item, itemIndex) => {
                         let priceDisplay = item.price !== undefined ? `$${item.price}` : Object.entries(item.prices).map(([k, v]) => `${k}: $${v}`).join(' / ');
                         itemsHtml += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px dashed #eee;">
-                                <div><b style="color:#2c3e50;">${item.name}</b> <span style="color:#e74c3c; font-size:13px; margin-left:10px;">${priceDisplay}</span></div>
+                            <div class="admin-item-row">
+                                <div><b style="color:#1e293b; font-size:15px;">${item.name}</b> <span style="color:#e11d48; font-size:13px; margin-left:12px; font-weight:600;">${priceDisplay}</span></div>
                                 <div>
-                                    <button class="btn-warning-custom" onclick="openEditItemModal(${catIndex}, ${itemIndex})">編輯</button>
-                                    <button class="btn-danger-custom" onclick="deleteMenuItem(${catIndex}, ${itemIndex})">刪除</button>
+                                    <button class="btn-warning-custom" onclick="openEditItemModal(${catIndex}, ${itemIndex})"><i class="fa-solid fa-pen"></i> 編輯</button>
+                                    <button class="btn-danger-custom" onclick="deleteMenuItem(${catIndex}, ${itemIndex})"><i class="fa-solid fa-trash"></i> 刪除</button>
                                 </div>
                             </div>
                         `;
                     });
                 } else {
-                    itemsHtml = `<p style="color:#aaa; padding:10px; font-size:13px;">此分類尚無品項</p>`;
+                    itemsHtml = `<p style="color:#aaa; padding:15px; font-size:13px; text-align:center;">此分類尚無品項</p>`;
                 }
 
                 container.innerHTML += `
-                    <div style="background:#f8f9fa; border:1px solid #e1e8ed; border-radius:8px; margin-bottom:15px; overflow:hidden;">
-                        <div style="background:#edf2f7; padding:12px 15px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
-                            <span>${cat.category}</span>
-                            <button class="btn-danger-custom" style="background-color:#c0392b; padding:4px 8px; font-size:11px;" onclick="deleteCategory(${catIndex})">刪除分類</button>
+                    <div class="admin-cat-card" id="cat-card-${catIndex}">
+                        <div class="admin-cat-header" onclick="toggleAdminCategory(${catIndex})">
+                            <div class="admin-cat-title-area">
+                                <i class="fa-solid fa-chevron-right toggle-icon-${catIndex}" style="transition: transform 0.2s; font-size: 13px; color: #64748b;"></i>
+                                <span>${cat.category}</span>
+                                <span style="font-size:12px; color:#64748b; font-weight:normal; background:#e2e8f0; padding:2px 8px; border-radius:10px;">${cat.items ? cat.items.length : 0} 項</span>
+                            </div>
+                            <div class="admin-cat-actions" onclick="event.stopPropagation()">
+                                <button class="btn-danger-custom" style="padding:5px 10px; font-size:11px;" onclick="deleteCategory(${catIndex})"><i class="fa-solid fa-trash-can"></i> 刪除分類</button>
+                            </div>
                         </div>
-                        <div style="padding:10px 15px; background:white;">${itemsHtml}</div>
+                        <div class="admin-cat-body" id="cat-body-${catIndex}">
+                            ${itemsHtml}
+                        </div>
                     </div>
                 `;
             });
+        }
+
+        // 摺疊展開切換功能
+        function toggleAdminCategory(catIndex) {
+            const body = document.getElementById(`cat-body-${catIndex}`);
+            const card = document.getElementById(`cat-card-${catIndex}`);
+            const icon = card.querySelector(`.toggle-icon-${catIndex}`);
+            const header = card.querySelector('.admin-cat-header');
+
+            if (body.classList.contains('open')) {
+                body.classList.remove('open');
+                header.classList.remove('active');
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                body.classList.add('open');
+                header.classList.add('active');
+                icon.style.transform = 'rotate(90deg)';
+            }
         }
 
         function openAddCategoryModal() {
@@ -725,7 +816,7 @@
             document.getElementById('item-modal-prices-json').value = "";
             document.getElementById('group-single-price').style.display = "block";
             document.getElementById('group-prices-json').style.display = "none";
-            document.getElementById('item-modal').style.display = "flex";
+            document.getElementById('item-modal').style.display = 'flex';
         }
 
         function openEditItemModal(catIndex, itemIndex) {
@@ -747,11 +838,11 @@
                     document.getElementById('group-single-price').style.display = "none";
                     document.getElementById('group-prices-json').style.display = "block";
                 }
-                document.getElementById('item-modal').style.display = "flex";
+                document.getElementById('item-modal').style.display = 'flex';
             });
         }
 
-        function closeItemModal() { document.getElementById('item-modal').style.display = "none"; }
+        function closeItemModal() { document.getElementById('item-modal').style.display = 'none'; }
 
         function saveItemData() {
             const catIndex = parseInt(document.getElementById('item-modal-category').value);
