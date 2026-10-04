@@ -75,7 +75,6 @@
 
         .menu-manage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         
-        /* 🎨 前台風格菜單區塊與折疊設計 */
         .admin-cat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; transition: 0.2s; }
         .admin-cat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
         
@@ -89,7 +88,6 @@
         .admin-cat-body { padding: 15px 20px; background: white; display: none; }
         .admin-cat-body.open { display: block; }
 
-        /* ✨ 模擬前台卡片與規格樣式的後台編輯列 */
         .admin-item-card-row { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px; transition: 0.2s; }
         .admin-item-card-row:hover { border-color: var(--accent-color); box-shadow: 0 4px 10px rgba(230,126,34,0.08); background: #fffcf9; }
         
@@ -113,31 +111,14 @@
         .btn-warning-custom { background-color: #f59e0b; color: white; border: none; padding: 7px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
         .btn-warning-custom:hover { background-color: #d97706; }
 
-        /* 🚀 右下方至頂火箭圈圈按鈕 */
         #back-to-top-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(234,88,12,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            z-index: 999;
-            transition: transform 0.2s, opacity 0.2s;
-            opacity: 0.9;
+            position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px;
+            background: linear-gradient(135deg, #f97316, #ea580c); color: white; border: none;
+            border-radius: 50%; cursor: pointer; box-shadow: 0 4px 15px rgba(234,88,12,0.4);
+            display: flex; justify-content: center; align-items: center; font-size: 20px; z-index: 999;
+            transition: transform 0.2s, opacity 0.2s; opacity: 0.9;
         }
-        #back-to-top-btn:hover {
-            transform: translateY(-4px) scale(1.05);
-            opacity: 1;
-        }
+        #back-to-top-btn:hover { transform: translateY(-4px) scale(1.05); opacity: 1; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
         .modal-card { background: white; width: 500px; max-width: 90%; padding: 30px; border-radius: 16px; box-shadow: 0 20px 35px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
@@ -194,7 +175,7 @@
     <div id="main-admin-content">
         <header>
             <div>
-                <h1 style="font-size: 22px;">🍳 珍愛家蔬食早午餐 - 後台管理與接單系統 🔔</h1>
+                <h1 style="font-size: 22px;">🍳 珍愛家素食早午餐 - 後台管理與接單系統 🔔</h1>
                 <p style="font-size: 12px; opacity: 0.85; margin-top: 4px;">系統已成功連線 Firebase：新訂單即時通知、支援後台動態修改前台菜單與價格</p>
             </div>
             <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
@@ -256,7 +237,6 @@
             </div>
         </div>
 
-        <!-- 🚀 右下方至頂火箭圈圈 -->
         <button id="back-to-top-btn" onclick="scrollToTop()" title="回到頂部">
             <i class="fa-solid fa-rocket"></i>
         </button>
@@ -720,13 +700,12 @@
             });
         }
 
-        // 🌟 菜單與類別管理邏輯（結合前台卡片與規格樣式、摺疊功能）
         function loadAdminMenuData() {
-            database.ref('menuData').once('value').then(snapshot => {
+            database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val();
                 if (!menu) {
                     menu = defaultMenuData;
-                    database.ref('menuData').set(defaultMenuData);
+                    database.ref('menu').set(defaultMenuData);
                 }
                 renderAdminMenuUI(menu);
             });
@@ -787,7 +766,6 @@
             });
         }
 
-        // 摺疊展開切換功能
         function toggleAdminCategory(catIndex) {
             const body = document.getElementById(`cat-body-${catIndex}`);
             const card = document.getElementById(`cat-card-${catIndex}`);
@@ -808,19 +786,19 @@
         function openAddCategoryModal() {
             const catName = prompt("請輸入新分類名稱 (例如: 🥞 輕食早點系列):");
             if (!catName) return;
-            database.ref('menuData').once('value').then(snapshot => {
+            database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val() || defaultMenuData;
                 menu.push({ category: catName.trim(), items: [] });
-                database.ref('menuData').set(menu).then(() => { loadAdminMenuData(); });
+                database.ref('menu').set(menu).then(() => { loadAdminMenuData(); });
             });
         }
 
         function deleteCategory(catIndex) {
             if (!confirm('確定要刪除此分類及底下所有品項嗎？')) return;
-            database.ref('menuData').once('value').then(snapshot => {
+            database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val() || defaultMenuData;
                 menu.splice(catIndex, 1);
-                database.ref('menuData').set(menu).then(() => { loadAdminMenuData(); });
+                database.ref('menu').set(menu).then(() => { loadAdminMenuData(); });
             });
         }
 
@@ -837,7 +815,7 @@
         }
 
         function openEditItemModal(catIndex, itemIndex) {
-            database.ref('menuData').once('value').then(snapshot => {
+            database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val() || defaultMenuData;
                 let item = menu[catIndex].items[itemIndex];
                 document.getElementById('modal-title').innerText = "編輯菜單品項";
@@ -867,7 +845,7 @@
             const name = document.getElementById('item-modal-name').value.trim();
             if (!name) { alert('請填寫品項名稱！'); return; }
 
-            database.ref('menuData').once('value').then(snapshot => {
+            database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val() || defaultMenuData;
                 let targetCat = menu[catIndex];
                 let newItemObj = { id: "custom_" + Date.now(), name: name };
@@ -891,7 +869,7 @@
                     targetCat.items[parseInt(itemIndexVal)] = newItemObj;
                 }
 
-                database.ref('menuData').set(menu).then(() => {
+                database.ref('menu').set(menu).then(() => {
                     closeItemModal();
                     loadAdminMenuData();
                 });
@@ -900,16 +878,16 @@
 
         function deleteMenuItem(catIndex, itemIndex) {
             if (!confirm('確定要刪除這個品項嗎？')) return;
-            database.ref('menuData').once('value').then(snapshot => {
+            database.ref('menu').once('value').then(snapshot => {
                 let menu = snapshot.val() || defaultMenuData;
                 menu[catIndex].items.splice(itemIndex, 1);
-                database.ref('menuData').set(menu).then(() => { loadAdminMenuData(); });
+                database.ref('menu').set(menu).then(() => { loadAdminMenuData(); });
             });
         }
 
         function resetMenuToDefault() {
             if (confirm('⚠️ 確定要將前台菜單全部重設為原始預設版本嗎？')) {
-                database.ref('menuData').set(defaultMenuData).then(() => {
+                database.ref('menu').set(defaultMenuData).then(() => {
                     alert('已成功回復預設菜單！');
                     loadAdminMenuData();
                 });
