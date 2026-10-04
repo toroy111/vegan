@@ -254,7 +254,7 @@
                 ]
             },
             {
-                category: "🍳 酥脆蛋餅 / 抓餅系列 ",
+                category: "🍳 酥脆蛋餅 / 抓餅系列",
                 isEggCakeSection: true,
                 items: [
                     { id: "g_01", name: "原味", prices: { "蛋餅": 25, "抓餅": 45 } },
@@ -382,22 +382,22 @@
             }
         }
 
-        // 🌟 修正重點：改為即時監聽 `.on('value', ...)`，確保後台一修改價格或刪除品項，前台即時同步更新！
-        // 【前台保持不變】前台會自動監聽 Firebase 變更並同步最新分類名稱
-function listenToFirebaseMenu() {
-    const menuRef = database.ref('menu');
-    menuRef.on('value', (snapshot) => {
-        if (snapshot.exists()) {
-            menu = snapshot.val();
-            initMenu(); // 自動重新渲染前台摺疊選單
-        } else {
-            menuRef.set(defaultMenu).then(() => {
-                menu = defaultMenu;
-                initMenu();
+        // 🌟 即時監聽 Firebase 的 menu 節點，確保後台一變更，前台隨時同步
+        function listenToFirebaseMenu() {
+            const menuRef = database.ref('menu');
+            menuRef.on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    menu = snapshot.val();
+                    initMenu();
+                } else {
+                    menuRef.set(defaultMenu).then(() => {
+                        menu = defaultMenu;
+                        initMenu();
+                    });
+                }
             });
         }
-    });
-}
+
         function initMenu() {
             const container = document.getElementById('accordion-container');
             container.innerHTML = '';
@@ -427,7 +427,9 @@ function listenToFirebaseMenu() {
             
             if (catGroup.isMainItem) {
                 html += `<div class="opt-label">選擇主食種類：</div><div class="option-group" id="type-${item.id}">`;
-                item.types.forEach((t, i) => { html += `<button class="opt-btn ${i===0?'selected':''}" onclick="updateMainPrice('${item.id}', this)">${t}</button>`; });
+                if(item.types) {
+                    item.types.forEach((t, i) => { html += `<button class="opt-btn ${i===0?'selected':''}" onclick="updateMainPrice('${item.id}', this)">${t}</button>`; });
+                }
                 html += `</div>`;
                 if (item.hasEggOpt) {
                     html += `<div class="opt-label">加蛋/無蛋選單：</div><div class="option-group" id="egg-${item.id}">
@@ -442,8 +444,8 @@ function listenToFirebaseMenu() {
                 html += `<div class="opt-label">餐點客製化備註：</div>
                          <input type="text" id="note-${item.id}" class="opt-input" placeholder="例如：去美乃滋、吐司去邊...">`;
 
-                let firstKey = item.hasEggOpt ? `${item.types[0]}_加蛋` : `${item.types[0]}_無蛋`;
-                let initPrice = item.prices && item.prices[firstKey] ? item.prices[firstKey] : 30;
+                let firstKey = item.hasEggOpt ? `${item.types ? item.types[0] : ''}_加蛋` : `${item.types ? item.types[0] : ''}_無蛋`;
+                let initPrice = item.prices && item.prices[firstKey] !== undefined ? item.prices[firstKey] : (item.prices ? Object.values(item.prices)[0] : 30);
                 html += `</div><div class="item-footer"><span class="item-price" id="price-${item.id}">$${initPrice}</span>`;
             } 
             else if (catGroup.isEggCakeSection) {
@@ -569,7 +571,7 @@ function listenToFirebaseMenu() {
                     item.typeOptions.forEach((o, i) => { html += `<button class="opt-btn ${i===0?'selected':''}" onclick="selectSingleBtn(this)">${o}</button>`; });
                     html += `</div>`;
                 }
-                html += `</div><div class="item-footer"><span class="item-price">$${item.price}</span>`;
+                html += `</div><div class="item-footer"><span class="item-price">$${item.price !== undefined ? item.price : 0}</span>`;
             }
             
             html += `
@@ -609,61 +611,58 @@ function listenToFirebaseMenu() {
             }
         }
 
-       // 確保主食類價格計算能正確對應後台的 prices 物件
-function updateMainPrice(id, clickedBtn) {
-    if(clickedBtn) { selectSingleBtn(clickedBtn); }
-    let item = findItemById(id);
-    if (!item) return;
-    
-    const typeElem = document.getElementById(`type-${id}`);
-    const eggElem = document.getElementById(`egg-${id}`);
-    
-    const typeSelected = typeElem ? typeElem.querySelector('.opt-btn.selected')?.innerText : '';
-    const eggSelected = eggElem ? eggElem.querySelector('.opt-btn.selected')?.innerText : '無蛋';
-    
-    let key = `${typeSelected}_${eggSelected}`;
-    let price = 30; // 預設值
-    
-    if (item.prices) {
-        if (item.prices[key] !== undefined) {
-            price = item.prices[key];
-        } else if (item.prices[`${typeSelected}_無蛋`] !== undefined) {
-            price = item.prices[`${typeSelected}_無蛋`];
-        } else {
-            price = Object.values(item.prices)[0] || 30;
+        function updateMainPrice(id, clickedBtn) {
+            if(clickedBtn) { selectSingleBtn(clickedBtn); }
+            let item = findItemById(id);
+            if (!item) return;
+            
+            const typeElem = document.getElementById(`type-${id}`);
+            const eggElem = document.getElementById(`egg-${id}`);
+            
+            const typeSelected = typeElem ? typeElem.querySelector('.opt-btn.selected')?.innerText : '';
+            const eggSelected = eggElem ? eggElem.querySelector('.opt-btn.selected')?.innerText : '無蛋';
+            
+            let key = `${typeSelected}_${eggSelected}`;
+            let price = 30;
+            
+            if (item.prices) {
+                if (item.prices[key] !== undefined) {
+                    price = item.prices[key];
+                } else if (item.prices[`${typeSelected}_無蛋`] !== undefined) {
+                    price = item.prices[`${typeSelected}_無蛋`];
+                } else {
+                    price = Object.values(item.prices)[0] || 30;
+                }
+            }
+            
+            const priceElement = document.getElementById(`price-${id}`);
+            if (priceElement) {
+                priceElement.innerText = `$${price}`;
+            }
         }
-    }
-    
-    const priceElement = document.getElementById(`price-${id}`);
-    if (priceElement) {
-        priceElement.innerText = `$${price}`;
-    }
-}
 
-// 確保一般規格價格能正確更新
-function updateSpecPrice(id, price, clickedBtn) {
-    if(clickedBtn) { selectSingleBtn(clickedBtn); }
-    const priceElement = document.getElementById(`price-${id}`);
-    if (priceElement) {
-        priceElement.innerText = `$${price}`;
-    }
-}
+        function updateSpecPrice(id, price, clickedBtn) {
+            if(clickedBtn) { selectSingleBtn(clickedBtn); }
+            const priceElement = document.getElementById(`price-${id}`);
+            if (priceElement) {
+                priceElement.innerText = `$${price}`;
+            }
+        }
 
-// 確保飮品價格能正確更新
-function updateDrinkPrice(id, clickedBtn) {
-    if(clickedBtn) { selectSingleBtn(clickedBtn); }
-    let item = findItemById(id);
-    if (!item || !item.prices) return;
-    
-    const sizeElem = document.getElementById(`size-${id}`);
-    const sizeSelected = sizeElem ? sizeElem.querySelector('.opt-btn.selected')?.innerText : '';
-    
-    let price = item.prices[sizeSelected] || Object.values(item.prices)[0] || 0;
-    const priceElement = document.getElementById(`price-${id}`);
-    if (priceElement) {
-        priceElement.innerText = `$${price}`;
-    }
-}
+        function updateDrinkPrice(id, clickedBtn) {
+            if(clickedBtn) { selectSingleBtn(clickedBtn); }
+            let item = findItemById(id);
+            if (!item || !item.prices) return;
+            
+            const sizeElem = document.getElementById(`size-${id}`);
+            const sizeSelected = sizeElem ? sizeElem.querySelector('.opt-btn.selected')?.innerText : '';
+            
+            let price = item.prices[sizeSelected] || Object.values(item.prices)[0] || 0;
+            const priceElement = document.getElementById(`price-${id}`);
+            if (priceElement) {
+                priceElement.innerText = `$${price}`;
+            }
+        }
 
         function findItemById(id) {
             for(let cat of menu) {
@@ -695,7 +694,7 @@ function updateDrinkPrice(id, clickedBtn) {
                 if (customNote) {
                     fullName += ` [備註: ${customNote}]`;
                 }
-                finalPrice = item.prices[`${typeS}_${eggS}`];
+                finalPrice = item.prices && item.prices[`${typeS}_${eggS}`] !== undefined ? item.prices[`${typeS}_${eggS}`] : Object.values(item.prices)[0];
             } 
             else if (catGroup.isEggCakeSection) {
                 const specS = document.getElementById(`spec-${id}`).querySelector('.opt-btn.selected').innerText;
@@ -735,7 +734,7 @@ function updateDrinkPrice(id, clickedBtn) {
                 fullName = `${name}(${specS})`;
                 finalPrice = item.prices[specS];
             } else {
-                finalPrice = item.price;
+                finalPrice = item.price !== undefined ? item.price : 0;
                 if (item.isEggFryItem) {
                     fullName = document.getElementById(`egg-fry-select-${id}`).value;
                 } else if(item.typeOptions) {
@@ -754,7 +753,7 @@ function updateDrinkPrice(id, clickedBtn) {
                 cart.push({ fullName: fullName, price: finalPrice, qty: userQty, bag: defaultBag }); 
             }
             
-            if (catGroup.isMainItem) { document.getElementById(`note-${id}`).value = ''; }
+            if (catGroup.isMainItem && document.getElementById(`note-${id}`)) { document.getElementById(`note-${id}`).value = ''; }
             if (qtyInput) { qtyInput.value = 1; }
             
             renderCart();
@@ -845,7 +844,7 @@ function updateDrinkPrice(id, clickedBtn) {
                 timestamp: firebase.database.ServerValue.TIMESTAMP 
             };
 
-           firebase.database().ref('orders').push(newOrder)
+           database.ref('orders').push(newOrder)
             .then(() => {
                 localStorage.setItem('jlh_order_id_counter', currentId + 1);
 
@@ -903,7 +902,7 @@ function updateDrinkPrice(id, clickedBtn) {
         window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('order-date').value = today;
-            listenToFirebaseMenu(); // 啟動即時菜單監聽
+            listenToFirebaseMenu(); 
             toggleDiningMode(); 
         };
     </script>
