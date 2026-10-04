@@ -263,7 +263,7 @@
                 <label>價格設定模式說明：</label>
                 <p style="font-size: 12px; color: #666; background: #f8fafc; padding: 10px; border-radius: 6px; line-height: 1.5; border: 1px solid #e2e8f0;">
                     • <b>單一價格品項</b>：請在下方直接填寫固定價格。<br>
-                    • <b>多規格/多價格品項</b>：請以 JSON 格式填寫，例如：<code>{"白吐司": 25, "漢堡": 30}</code>
+                    • <b>多規格/多價格品項</b>：請以 JSON 格式填寫，例如：<code>[{"k": "蛋餅", "v": 25}, {"k": "抓餅", "v": 45}]</code>
                 </p>
             </div>
             <div class="form-group" id="group-single-price">
@@ -272,7 +272,7 @@
             </div>
             <div class="form-group" id="group-prices-json" style="display:none;">
                 <label>多規格價格 (JSON 格式)：</label>
-                <textarea id="item-modal-prices-json" class="form-control" style="height: 90px;" placeholder='{"規格一": 30, "規格二": 45}'></textarea>
+                <textarea id="item-modal-prices-json" class="form-control" style="height: 90px;" placeholder='[{"k": "規格一", "v": 30}, {"k": "規格二", "v": 45}]'></textarea>
             </div>
             
             <div class="modal-buttons">
@@ -334,64 +334,63 @@
 
         let currentAdminMenuCache = [];
 
-        // 🌟 依照紙本菜單順序調整：主食 (白吐司->漢堡->潛艇堡)、蛋餅系列 (蛋餅->抓餅)
         const defaultMenuData = [
             {
                 category: "🥪 主食系列 (吐司 / 漢堡 / 潛艇堡)",
                 isMainItem: true,
                 items: [
-                    { id: "m_01", name: "煎蛋", types: ["白吐司", "漢堡", "潛艇堡"], prices: { "白吐司_無蛋": 30, "漢堡_無蛋": 30, "潛艇堡_無蛋": 40 } },
-                    { id: "m_02", name: "鮮蔬", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 40, "白吐司_無蛋": 25, "漢堡_加蛋": 40, "漢堡_無蛋": 25, "潛艇堡_加蛋": 50, "潛艇堡_無蛋": 35 } },
-                    { id: "m_03", name: "羅勒起士蛋", types: ["白吐司", "漢堡", "潛艇堡"], prices: { "白吐司_加蛋": 40, "漢堡_加蛋": 40, "潛艇堡_加蛋": 50 } },
-                    { id: "m_04", name: "起士鮮蔬", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 45, "白吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 55, "潛艇堡_無蛋": 40 } },
-                    { id: "m_05", name: "玉米", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 45, "白吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 45 } },
-                    { id: "m_06", name: "素肉鬆", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 45, "白吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 45 } },
-                    { id: "m_07", name: "火腿", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 45, "白吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 45 } },
-                    { id: "m_08", name: "培根", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 45, "白吐司_無蛋": 30, "漢堡_加蛋": 45, "漢堡_無蛋": 30, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 45 } },
-                    { id: "m_09", name: "香椿野菇(全素)", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 50, "白吐司_無蛋": 35, "漢堡_加蛋": 50, "漢堡_無蛋": 35, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 50 } },
-                    { id: "m_10", name: "薯餅", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 50, "白吐司_無蛋": 35, "漢堡_加蛋": 50, "漢堡_無蛋": 35, "潛艇堡_加蛋": 60, "潛艇堡_無蛋": 50 } },
-                    { id: "m_11", name: "鮪魚沙拉", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 55, "白吐司_無蛋": 40, "漢堡_加蛋": 55, "漢堡_無蛋": 40, "潛艇堡_加蛋": 65, "潛艇堡_無蛋": 50 } },
-                    { id: "m_12", name: "香雞排", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 55, "白吐司_無蛋": 40, "漢堡_加蛋": 55, "漢堡_無蛋": 40, "潛艇堡_加蛋": 65, "潛艇堡_無蛋": 50 } },
-                    { id: "m_13", name: "花生薯餅(全素)", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 60, "白吐司_無蛋": 45, "漢堡_加蛋": 60, "漢堡_無蛋": 45, "潛艇堡_加蛋": 70, "潛艇堡_無蛋": 55 } },
-                    { id: "m_14", name: "熱狗", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 60, "白吐司_無蛋": 45, "漢堡_加蛋": 60, "漢堡_無蛋": 45, "潛艇堡_加蛋": 70, "潛艇堡_無蛋": 55 } },
-                    { id: "m_15", name: "黑胡椒豬排", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 65, "白吐司_無蛋": 50, "漢堡_加蛋": 65, "漢堡_無蛋": 50, "潛艇堡_加蛋": 75, "潛艇堡_無蛋": 60 } },
-                    { id: "m_16", name: "北海鱈魚", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 65, "白吐司_無蛋": 50, "漢堡_加蛋": 65, "漢堡_無蛋": 50, "潛艇堡_加蛋": 75, "潛艇堡_無蛋": 60 } },
-                    { id: "m_17", name: "香辣卡拉雞", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 65, "白吐司_無蛋": 50, "漢堡_加蛋": 65, "漢堡_無蛋": 50, "潛艇堡_加蛋": 75, "潛艇堡_無蛋": 60 } },
-                    { id: "m_18", name: "雙芥末花枝", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 70, "白吐司_無蛋": 55, "漢堡_加蛋": 70, "漢堡_無蛋": 55, "潛艇堡_加蛋": 80, "潛艇堡_無蛋": 65 } },
-                    { id: "m_19", name: "美式熱狗(全素)", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 70, "白吐司_無蛋": 55, "漢堡_加蛋": 70, "漢堡_無蛋": 55, "潛艇堡_加蛋": 80, "潛艇堡_無蛋": 65 } },
-                    { id: "m_20", name: "經典牛小排", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 75, "白吐司_無蛋": 60, "漢堡_加蛋": 75, "漢堡_無蛋": 60, "潛艇堡_加蛋": 85, "潛艇堡_無蛋": 70 } },
-                    { id: "m_21", name: "酸菜牛肉", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 75, "白吐司_無蛋": 60, "漢堡_加蛋": 75, "漢堡_無蛋": 60, "潛艇堡_加蛋": 85, "潛艇堡_無蛋": 70 } },
-                    { id: "m_22", name: "墨西哥辣雞(全素)", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 75, "白吐司_無蛋": 60, "漢堡_加蛋": 75, "漢堡_無蛋": 60, "潛艇堡_加蛋": 85, "潛艇堡_無蛋": 70 } },
-                    { id: "m_23", name: "超級總匯", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 75, "白吐司_無蛋": 60, "漢堡_加蛋": 75, "漢堡_無蛋": 60, "潛艇堡_加蛋": 85, "潛艇堡_無蛋": 70 } },
-                    { id: "m_24", name: "雙魚寶寶", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 80, "白吐司_無蛋": 65, "漢堡_加蛋": 80, "漢堡_無蛋": 65, "潛艇堡_加蛋": 90, "潛艇堡_無蛋": 75 } },
-                    { id: "m_25", name: "海陸雙拼", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 80, "白吐司_無蛋": 65, "漢堡_加蛋": 80, "漢堡_無蛋": 65, "潛艇堡_加蛋": 90, "潛艇堡_無蛋": 75 } },
-                    { id: "m_26", name: "泡菜卡拉", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, prices: { "白吐司_加蛋": 80, "白吐司_無蛋": 65, "漢堡_加蛋": 80, "漢堡_無蛋": 65, "潛艇堡_加蛋": 90, "潛艇堡_無蛋": 75 } }
+                    { id: "m_01", name: "煎蛋", types: ["白吐司", "漢堡", "潛艇堡"], pricesList: [{k: "白吐司_無蛋", v: 30}, {k: "漢堡_無蛋", v: 30}, {k: "潛艇堡_無蛋", v: 40}] },
+                    { id: "m_02", name: "鮮蔬", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 40}, {k: "白吐司_無蛋", v: 25}, {k: "漢堡_加蛋", v: 40}, {k: "漢堡_無蛋", v: 25}, {k: "潛艇堡_加蛋", v: 50}, {k: "潛艇堡_無蛋", v: 35}] },
+                    { id: "m_03", name: "羅勒起士蛋", types: ["白吐司", "漢堡", "潛艇堡"], pricesList: [{k: "白吐司_加蛋", v: 40}, {k: "漢堡_加蛋", v: 40}, {k: "潛艇堡_加蛋", v: 50}] },
+                    { id: "m_04", name: "起士鮮蔬", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 45}, {k: "白吐司_無蛋", v: 30}, {k: "漢堡_加蛋", v: 45}, {k: "漢堡_無蛋", v: 30}, {k: "潛艇堡_加蛋", v: 55}, {k: "潛艇堡_無蛋", v: 40}] },
+                    { id: "m_05", name: "玉米", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 45}, {k: "白吐司_無蛋", v: 30}, {k: "漢堡_加蛋", v: 45}, {k: "漢堡_無蛋", v: 30}, {k: "潛艇堡_加蛋", v: 60}, {k: "潛艇堡_無蛋", v: 45}] },
+                    { id: "m_06", name: "素肉鬆", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 45}, {k: "白吐司_無蛋", v: 30}, {k: "漢堡_加蛋", v: 45}, {k: "漢堡_無蛋", v: 30}, {k: "潛艇堡_加蛋", v: 60}, {k: "潛艇堡_無蛋", v: 45}] },
+                    { id: "m_07", name: "火腿", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 45}, {k: "白吐司_無蛋", v: 30}, {k: "漢堡_加蛋", v: 45}, {k: "漢堡_無蛋", v: 30}, {k: "潛艇堡_加蛋", v: 60}, {k: "潛艇堡_無蛋", v: 45}] },
+                    { id: "m_08", name: "培根", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 45}, {k: "白吐司_無蛋", v: 30}, {k: "漢堡_加蛋", v: 45}, {k: "漢堡_無蛋", v: 30}, {k: "潛艇堡_加蛋", v: 60}, {k: "潛艇堡_無蛋", v: 45}] },
+                    { id: "m_09", name: "香椿野菇(全素)", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 50}, {k: "白吐司_無蛋", v: 35}, {k: "漢堡_加蛋", v: 50}, {k: "漢堡_無蛋", v: 35}, {k: "潛艇堡_加蛋", v: 60}, {k: "潛艇堡_無蛋", v: 50}] },
+                    { id: "m_10", name: "薯餅", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 50}, {k: "白吐司_無蛋", v: 35}, {k: "漢堡_加蛋", v: 50}, {k: "漢堡_無蛋", v: 35}, {k: "潛艇堡_加蛋", v: 60}, {k: "潛艇堡_無蛋", v: 50}] },
+                    { id: "m_11", name: "鮪魚沙拉", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 55}, {k: "白吐司_無蛋", v: 40}, {k: "漢堡_加蛋", v: 55}, {k: "漢堡_無蛋", v: 40}, {k: "潛艇堡_加蛋", v: 65}, {k: "潛艇堡_無蛋", v: 50}] },
+                    { id: "m_12", name: "香雞排", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 55}, {k: "白吐司_無蛋", v: 40}, {k: "漢堡_加蛋", v: 55}, {k: "漢堡_無蛋", v: 40}, {k: "潛艇堡_加蛋", v: 65}, {k: "潛艇堡_無蛋", v: 50}] },
+                    { id: "m_13", name: "花生薯餅(全素)", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 60}, {k: "白吐司_無蛋", v: 45}, {k: "漢堡_加蛋", v: 60}, {k: "漢堡_無蛋", v: 45}, {k: "潛艇堡_加蛋", v: 70}, {k: "潛艇堡_無蛋", v: 55}] },
+                    { id: "m_14", name: "熱狗", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 60}, {k: "白吐司_無蛋", v: 45}, {k: "漢堡_加蛋", v: 60}, {k: "漢堡_無蛋", v: 45}, {k: "潛艇堡_加蛋", v: 70}, {k: "潛艇堡_無蛋", v: 55}] },
+                    { id: "m_15", name: "黑胡椒豬排", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 65}, {k: "白吐司_無蛋", v: 50}, {k: "漢堡_加蛋", v: 65}, {k: "漢堡_無蛋", v: 50}, {k: "潛艇堡_加蛋", v: 75}, {k: "潛艇堡_無蛋", v: 60}] },
+                    { id: "m_16", name: "北海鱈魚", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 65}, {k: "白吐司_無蛋", v: 50}, {k: "漢堡_加蛋", v: 65}, {k: "漢堡_無蛋", v: 50}, {k: "潛艇堡_加蛋", v: 75}, {k: "潛艇堡_無蛋", v: 60}] },
+                    { id: "m_17", name: "香辣卡拉雞", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 65}, {k: "白吐司_無蛋", v: 50}, {k: "漢堡_加蛋", v: 65}, {k: "漢堡_無蛋", v: 50}, {k: "潛艇堡_加蛋", v: 75}, {k: "潛艇堡_無蛋", v: 60}] },
+                    { id: "m_18", name: "雙芥末花枝", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 70}, {k: "白吐司_無蛋", v: 55}, {k: "漢堡_加蛋", v: 70}, {k: "漢堡_無蛋", v: 55}, {k: "潛艇堡_加蛋", v: 80}, {k: "潛艇堡_無蛋", v: 65}] },
+                    { id: "m_19", name: "美式熱狗(全素)", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 70}, {k: "白吐司_無蛋", v: 55}, {k: "漢堡_加蛋", v: 70}, {k: "漢堡_無蛋", v: 55}, {k: "潛艇堡_加蛋", v: 80}, {k: "潛艇堡_無蛋", v: 65}] },
+                    { id: "m_20", name: "經典牛小排", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 75}, {k: "白吐司_無蛋", v: 60}, {k: "漢堡_加蛋", v: 75}, {k: "漢堡_無蛋", v: 60}, {k: "潛艇堡_加蛋", v: 85}, {k: "潛艇堡_無蛋", v: 70}] },
+                    { id: "m_21", name: "酸菜牛肉", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 75}, {k: "白吐司_無蛋", v: 60}, {k: "漢堡_加蛋", v: 75}, {k: "漢堡_無蛋", v: 60}, {k: "潛艇堡_加蛋", v: 85}, {k: "潛艇堡_無蛋", v: 70}] },
+                    { id: "m_22", name: "墨西哥辣雞(全素)", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 75}, {k: "白吐司_無蛋", v: 60}, {k: "漢堡_加蛋", v: 75}, {k: "漢堡_無蛋", v: 60}, {k: "潛艇堡_加蛋", v: 85}, {k: "潛艇堡_無蛋", v: 70}] },
+                    { id: "m_23", name: "超級總匯", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 75}, {k: "白吐司_無蛋", v: 60}, {k: "漢堡_加蛋", v: 75}, {k: "漢堡_無蛋", v: 60}, {k: "潛艇堡_加蛋", v: 85}, {k: "潛艇堡_無蛋", v: 70}] },
+                    { id: "m_24", name: "雙魚寶寶", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 80}, {k: "白吐司_無蛋", v: 65}, {k: "漢堡_加蛋", v: 80}, {k: "漢堡_無蛋", v: 65}, {k: "潛艇堡_加蛋", v: 90}, {k: "潛艇堡_無蛋", v: 75}] },
+                    { id: "m_25", name: "海陸雙拼", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 80}, {k: "白吐司_無蛋", v: 65}, {k: "漢堡_加蛋", v: 80}, {k: "漢堡_無蛋", v: 65}, {k: "潛艇堡_加蛋", v: 90}, {k: "潛艇堡_無蛋", v: 75}] },
+                    { id: "m_26", name: "泡菜卡拉", types: ["白吐司", "漢堡", "潛艇堡"], hasEggOpt: true, pricesList: [{k: "白吐司_加蛋", v: 80}, {k: "白吐司_無蛋", v: 65}, {k: "漢堡_加蛋", v: 80}, {k: "漢堡_無蛋", v: 65}, {k: "潛艇堡_加蛋", v: 90}, {k: "潛艇堡_無蛋", v: 75}] }
                 ]
             },
             {
                 category: "🍳 酥脆蛋餅 / 抓餅系列",
                 isEggCakeSection: true,
                 items: [
-                    { id: "g_01", name: "原味", prices: { "蛋餅": 25, "抓餅": 45 } },
-                    { id: "g_02", name: "日式", prices: { "蛋餅": 35, "抓餅": 55 } },
-                    { id: "g_03", name: "九層塔", prices: { "蛋餅": 35, "抓餅": 55 } },
-                    { id: "g_04", name: "起士", prices: { "蛋餅": 35, "抓餅": 55 } },
-                    { id: "g_05", name: "素肉鬆", prices: { "蛋餅": 35, "抓餅": 55 } },
-                    { id: "g_06", name: "菜脯", prices: { "蛋餅": 35, "抓餅": 55 } },
-                    { id: "g_07", name: "菜脯九層塔", prices: { "蛋餅": 35, "抓餅": 55 } },
-                    { id: "g_08", name: "火腿", prices: { "蛋餅": 35, "抓餅": 55 } },
-                    { id: "g_09", name: "培根", prices: { "蛋餅": 35, "抓餅": 55 } },
-                    { id: "g_10", name: "玉米", prices: { "蛋餅": 40, "抓餅": 60 } },
-                    { id: "g_11", name: "鮮蔬", prices: { "蛋餅": 40, "抓餅": 60 } },
-                    { id: "g_12", name: "薯餅", prices: { "蛋餅": 40, "抓餅": 60 } },
-                    { id: "g_13", name: "熱狗", prices: { "蛋餅": 45, "抓餅": 65 } },
-                    { id: "g_14", name: "鮪魚沙拉", prices: { "蛋餅": 45, "抓餅": 65 } },
-                    { id: "g_15", name: "黑胡椒野菇", prices: { "蛋餅": 45, "抓餅": 65 } },
-                    { id: "g_16", name: "豬排", prices: { "蛋餅": 45, "抓餅": 65 } },
-                    { id: "g_17", name: "酸菜培根", prices: { "蛋餅": 45, "抓餅": 65 } },
-                    { id: "g_18", name: "卡拉雞", prices: { "蛋餅": 50, "抓餅": 70 } },
-                    { id: "g_19", name: "泡菜起士", prices: { "蛋餅": 50, "抓餅": 70 } },
-                    { id: "g_20", name: "超級總匯", prices: { "蛋餅": 60, "抓餅": 80 } }
+                    { id: "g_01", name: "原味", pricesList: [{k: "蛋餅", v: 25}, {k: "抓餅", v: 45}] },
+                    { id: "g_02", name: "日式", pricesList: [{k: "蛋餅", v: 35}, {k: "抓餅", v: 55}] },
+                    { id: "g_03", name: "九層塔", pricesList: [{k: "蛋餅", v: 35}, {k: "抓餅", v: 55}] },
+                    { id: "g_04", name: "起士", pricesList: [{k: "蛋餅", v: 35}, {k: "抓餅", v: 55}] },
+                    { id: "g_05", name: "素肉鬆", pricesList: [{k: "蛋餅", v: 35}, {k: "抓餅", v: 55}] },
+                    { id: "g_06", name: "菜脯", pricesList: [{k: "蛋餅", v: 35}, {k: "抓餅", v: 55}] },
+                    { id: "g_07", name: "菜脯九層塔", pricesList: [{k: "蛋餅", v: 35}, {k: "抓餅", v: 55}] },
+                    { id: "g_08", name: "火腿", pricesList: [{k: "蛋餅", v: 35}, {k: "抓餅", v: 55}] },
+                    { id: "g_09", name: "培根", pricesList: [{k: "蛋餅", v: 35}, {k: "抓餅", v: 55}] },
+                    { id: "g_10", name: "玉米", pricesList: [{k: "蛋餅", v: 40}, {k: "抓餅", v: 60}] },
+                    { id: "g_11", name: "鮮蔬", pricesList: [{k: "蛋餅", v: 40}, {k: "抓餅", v: 60}] },
+                    { id: "g_12", name: "薯餅", pricesList: [{k: "蛋餅", v: 40}, {k: "抓餅", v: 60}] },
+                    { id: "g_13", name: "熱狗", pricesList: [{k: "蛋餅", v: 45}, {k: "抓餅", v: 65}] },
+                    { id: "g_14", name: "鮪魚沙拉", pricesList: [{k: "蛋餅", v: 45}, {k: "抓餅", v: 65}] },
+                    { id: "g_15", name: "黑胡椒野菇", pricesList: [{k: "蛋餅", v: 45}, {k: "抓餅", v: 65}] },
+                    { id: "g_16", name: "豬排", pricesList: [{k: "蛋餅", v: 45}, {k: "抓餅", v: 65}] },
+                    { id: "g_17", name: "酸菜培根", pricesList: [{k: "蛋餅", v: 45}, {k: "抓餅", v: 65}] },
+                    { id: "g_18", name: "卡拉雞", pricesList: [{k: "蛋餅", v: 50}, {k: "抓餅", v: 70}] },
+                    { id: "g_19", name: "泡菜起士", pricesList: [{k: "蛋餅", v: 50}, {k: "抓餅", v: 70}] },
+                    { id: "g_20", name: "超級總匯", pricesList: [{k: "蛋餅", v: 60}, {k: "抓餅", v: 80}] }
                 ]
             },
             {
@@ -422,41 +421,41 @@
                 category: "🍝 鐵板美味麵食",
                 isNoodleSection: true,
                 items: [
-                    { id: "n_01", name: "黑胡椒麵", prices: { "單點": 40, "加蛋": 55, "加菜": 55, "升級套餐": 80 } },
-                    { id: "n_02", name: "奶油白醬麵", prices: { "單點": 40, "加蛋": 55, "加菜": 55, "升級套餐": 80 } },
-                    { id: "n_03", name: "香菇肉燥麵", prices: { "單點": 45, "加蛋": 60, "加菜": 60, "升級套餐": 85 } },
-                    { id: "n_04", name: "香椿拌麵", prices: { "單點": 45, "加蛋": 60, "加菜": 60, "升級套餐": 85 } },
-                    { id: "n_05", name: "饕辣豆瓣麵", prices: { "單點": 45, "加蛋": 60, "加菜": 60, "升級套餐": 85 } },
-                    { id: "n_06", name: "茄汁酸菜麵", prices: { "單點": 50, "加蛋": 65, "加菜": 65, "升級套餐": 90 } },
-                    { id: "n_07", name: "鐵板拌麵", prices: { "單點": 55, "加蛋": 70, "加菜": 70, "升級套餐": 95 } },
-                    { id: "n_08", name: "泡菜炒麵", prices: { "單點": 80, "加蛋": 95, "加菜": 95, "升級套餐": 120 } }
+                    { id: "n_01", name: "黑胡椒麵", pricesList: [{k: "單點", v: 40}, {k: "加蛋", v: 55}, {k: "加菜", v: 55}, {k: "升級套餐", v: 80}] },
+                    { id: "n_02", name: "奶油白醬麵", pricesList: [{k: "單點", v: 40}, {k: "加蛋", v: 55}, {k: "加菜", v: 55}, {k: "升級套餐", v: 80}] },
+                    { id: "n_03", name: "香菇肉燥麵", pricesList: [{k: "單點", v: 45}, {k: "加蛋", v: 60}, {k: "加菜", v: 60}, {k: "升級套餐", v: 85}] },
+                    { id: "n_04", name: "香椿拌麵", pricesList: [{k: "單點", v: 45}, {k: "加蛋", v: 60}, {k: "加菜", v: 60}, {k: "升級套餐", v: 85}] },
+                    { id: "n_05", name: "饕辣豆瓣麵", pricesList: [{k: "單點", v: 45}, {k: "加蛋", v: 60}, {k: "加菜", v: 60}, {k: "升級套餐", v: 85}] },
+                    { id: "n_06", name: "茄汁酸菜麵", pricesList: [{k: "單點", v: 50}, {k: "加蛋", v: 65}, {k: "加菜", v: 65}, {k: "升級套餐", v: 90}] },
+                    { id: "n_07", name: "鐵板拌麵", pricesList: [{k: "單點", v: 55}, {k: "加蛋", v: 70}, {k: "加菜", v: 70}, {k: "升級套餐", v: 95}] },
+                    { id: "n_08", name: "泡菜炒麵", pricesList: [{k: "單點", v: 80}, {k: "加蛋", v: 95}, {k: "加菜", v: 95}, {k: "升級套餐", v: 120}] }
                 ]
             },
             {
                 category: "🍯 甜蜜果醬吐司系列",
                 items: [
-                    { id: "j_01", name: "花生果醬吐司", prices: { "薄片": 20, "厚片": 25 } },
-                    { id: "j_02", name: "巧克力果醬吐司", prices: { "薄片": 20, "厚片": 25 } },
-                    { id: "j_03", name: "草莓果醬吐司", prices: { "薄片": 20, "厚片": 25 } },
-                    { id: "j_04", name: "椰香果醬吐司", prices: { "薄片": 20, "厚片": 25 } },
-                    { id: "j_05", name: "抹茶果醬吐司", prices: { "薄片": 20, "厚片": 25 } }
+                    { id: "j_01", name: "花生果醬吐司", pricesList: [{k: "薄片", v: 20}, {k: "厚片", v: 25}] },
+                    { id: "j_02", name: "巧克力果醬吐司", pricesList: [{k: "薄片", v: 20}, {k: "厚片", v: 25}] },
+                    { id: "j_03", name: "草莓果醬吐司", pricesList: [{k: "薄片", v: 20}, {k: "厚片", v: 25}] },
+                    { id: "j_04", name: "椰香果醬吐司", pricesList: [{k: "薄片", v: 20}, {k: "厚片", v: 25}] },
+                    { id: "j_05", name: "抹茶果醬吐司", pricesList: [{k: "薄片", v: 20}, {k: "厚片", v: 25}] }
                 ]
             },
             {
                 category: "🥤 特調冷熱飲品 / 溫慢湯品",
                 isDrinkSection: true,
                 items: [
-                    { id: "d_01", name: "紅茶", prices: { "小杯400cc": 15, "中杯500cc": 20, "大杯700cc": 30 } },
-                    { id: "d_02", name: "奶茶", prices: { "小杯400cc": 15, "中杯500cc": 20, "大杯700cc": 30 } },
-                    { id: "d_03", name: "鮮奶茶", prices: { "小杯400cc": 25, "中杯500cc": 30, "大杯700cc": 40 } },
-                    { id: "d_04", name: "豆漿", hasNoSugar: true, prices: { "小杯400cc": 15, "清杯500cc": 20, "大杯700cc": 30 } },
-                    { id: "d_05", name: "柳丁汁", isJuice: true, prices: { "小杯400cc": 20, "中杯500cc": 25, "大杯700cc": 35 } },
-                    { id: "d_06", name: "豆漿紅茶", hasNoSugar: true, prices: { "小杯400cc": 20, "中杯500cc": 25, "大杯700cc": 35 } },
-                    { id: "d_07", name: "鴛鴦奶茶", prices: { "小杯400cc": 20, "中杯500cc": 30, "大杯700cc": 40 } },
-                    { id: "d_08", name: "咖啡", hasNoSugar: true, prices: { "小杯400cc": 20, "中杯500cc": 30, "大杯700cc": 40 } },
-                    { id: "d_09", name: "鮮奶咖啡", hasNoSugar: true, prices: { "小杯400cc": 30, "中杯500cc": 40, "大杯700cc": 50 } },
-                    { id: "d_10", name: "豆乳咖啡", hasNoSugar: true, prices: { "小杯400cc": 30, "中杯500cc": 40, "大杯700cc": 50 } },
-                    { id: "d_11", name: "鮮蜜豆奶", hasNoSugar: true, prices: { "小杯400cc": 30, "中杯500cc": 40, "大杯700cc": 50 } },
+                    { id: "d_01", name: "紅茶", pricesList: [{k: "小杯400cc", v: 15}, {k: "中杯500cc", v: 20}, {k: "大杯700cc", v: 30}] },
+                    { id: "d_02", name: "奶茶", pricesList: [{k: "小杯400cc", v: 15}, {k: "中杯500cc", v: 20}, {k: "大杯700cc", v: 30}] },
+                    { id: "d_03", name: "鮮奶茶", pricesList: [{k: "小杯400cc", v: 25}, {k: "中杯500cc", v: 30}, {k: "大杯700cc", v: 40}] },
+                    { id: "d_04", name: "豆漿", hasNoSugar: true, pricesList: [{k: "小杯400cc", v: 15}, {k: "清杯500cc", v: 20}, {k: "大杯700cc", v: 30}] },
+                    { id: "d_05", name: "柳丁汁", isJuice: true, pricesList: [{k: "小杯400cc", v: 20}, {k: "中杯500cc", v: 25}, {k: "大杯700cc", v: 35}] },
+                    { id: "d_06", name: "豆漿紅茶", hasNoSugar: true, pricesList: [{k: "小杯400cc", v: 20}, {k: "中杯500cc", v: 25}, {k: "大杯700cc", v: 35}] },
+                    { id: "d_07", name: "鴛鴦奶茶", pricesList: [{k: "小杯400cc", v: 20}, {k: "中杯500cc", v: 30}, {k: "大杯700cc", v: 40}] },
+                    { id: "d_08", name: "咖啡", hasNoSugar: true, pricesList: [{k: "小杯400cc", v: 20}, {k: "中杯500cc", v: 30}, {k: "大杯700cc", v: 40}] },
+                    { id: "d_09", name: "鮮奶咖啡", hasNoSugar: true, pricesList: [{k: "小杯400cc", v: 30}, {k: "中杯500cc", v: 40}, {k: "大杯700cc", v: 50}] },
+                    { id: "d_10", name: "豆乳咖啡", hasNoSugar: true, pricesList: [{k: "小杯400cc", v: 30}, {k: "中杯500cc", v: 40}, {k: "大杯700cc", v: 50}] },
+                    { id: "d_11", name: "鮮蜜豆奶", hasNoSugar: true, pricesList: [{k: "小杯400cc", v: 30}, {k: "中杯500cc", v: 40}, {k: "大杯700cc", v: 50}] },
                     { id: "d_12", name: "奶油濃湯", isSoup: true, price: 35 },
                     { id: "d_13", name: "蔬菜湯", isSoup: true, price: 35 }
                 ]
@@ -706,7 +705,20 @@
             });
         }
 
-        // 🌟 初始化讀取菜單：若 Firebase 無資料則自動寫入預設菜單
+        function migrateMenuDataFormat(menu) {
+            if (!menu) return defaultMenuData;
+            menu.forEach(cat => {
+                if (cat.items) {
+                    cat.items.forEach(item => {
+                        if (item.prices && !item.pricesList) {
+                            item.pricesList = Object.entries(item.prices).map(([k, v]) => ({ k, v }));
+                        }
+                    });
+                }
+            });
+            return menu;
+        }
+
         function loadAdminMenuData() {
             const menuRef = database.ref('menu');
             menuRef.once('value').then(snapshot => {
@@ -714,6 +726,8 @@
                 if (!menu) {
                     menu = defaultMenuData;
                     menuRef.set(defaultMenuData);
+                } else {
+                    menu = migrateMenuDataFormat(menu);
                 }
                 currentAdminMenuCache = JSON.parse(JSON.stringify(menu));
                 renderAdminMenuUI(currentAdminMenuCache);
@@ -739,17 +753,17 @@
                                     <input type="number" id="price-input-${catIndex}-${itemIndex}" value="${item.price}">
                                 </div>
                             `;
-                        } else if (item.prices) {
-                            const specEntries = Object.entries(item.prices);
-                            specsHtml = specEntries.map(([k, v], sIndex) => {
+                        } else {
+                            let pList = item.pricesList || (item.prices ? Object.entries(item.prices).map(([k,v])=>({k,v})) : []);
+                            specsHtml = pList.map((pObj, sIndex) => {
                                 let moveLeftBtn = sIndex > 0 ? `<button class="btn-spec-move" onclick="event.stopPropagation(); moveItemSpecLocally(${catIndex}, ${itemIndex}, ${sIndex}, -1)" title="向左移動">◀</button>` : '';
-                                let moveRightBtn = sIndex < specEntries.length - 1 ? `<button class="btn-spec-move" onclick="event.stopPropagation(); moveItemSpecLocally(${catIndex}, ${itemIndex}, ${sIndex}, 1)" title="向右移動">▶</button>` : '';
+                                let moveRightBtn = sIndex < pList.length - 1 ? `<button class="btn-spec-move" onclick="event.stopPropagation(); moveItemSpecLocally(${catIndex}, ${itemIndex}, ${sIndex}, 1)" title="向右移動">▶</button>` : '';
                                 
                                 return `
                                     <div class="price-input-group" id="spec-group-${catIndex}-${itemIndex}-${sIndex}">
                                         <div style="display:flex; gap:2px; align-items:center;">${moveLeftBtn}${moveRightBtn}</div>
-                                        <span>${k}: $</span>
-                                        <input type="number" id="price-input-${catIndex}-${itemIndex}-${sIndex}" value="${v}">
+                                        <span>${pObj.k}: $</span>
+                                        <input type="number" id="price-input-${catIndex}-${itemIndex}-${sIndex}" value="${pObj.v}">
                                     </div>
                                 `;
                             }).join('');
@@ -824,15 +838,18 @@
                     if (priceInput) {
                         item.price = parseInt(priceInput.value) || 0;
                     }
-                } else if (item.prices) {
-                    let newPricesObj = {};
-                    const specKeys = Object.keys(item.prices);
-                    specKeys.forEach((key, sIndex) => {
+                } else {
+                    let pList = item.pricesList || [];
+                    pList.forEach((pObj, sIndex) => {
                         const multiPriceInput = document.getElementById(`price-input-${catIndex}-${itemIndex}-${sIndex}`);
-                        let val = multiPriceInput ? (parseInt(multiPriceInput.value) || 0) : item.prices[key];
-                        newPricesObj[key] = val;
+                        if (multiPriceInput) {
+                            pObj.v = parseInt(multiPriceInput.value) || 0;
+                        }
                     });
-                    item.prices = newPricesObj;
+                    item.pricesList = pList;
+                    if (item.prices) {
+                        delete item.prices;
+                    }
                 }
             });
         }
@@ -840,17 +857,15 @@
         function moveItemSpecLocally(catIndex, itemIndex, specIndex, direction) {
             collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
             let item = currentAdminMenuCache[catIndex].items[itemIndex];
-            if (!item.prices) return;
+            if (!item.pricesList) return;
 
-            let entries = Object.entries(item.prices);
             let targetIndex = specIndex + direction;
-            if (targetIndex < 0 || targetIndex >= entries.length) return;
+            if (targetIndex < 0 || targetIndex >= item.pricesList.length) return;
 
-            let temp = entries[specIndex];
-            entries[specIndex] = entries[targetIndex];
-            entries[targetIndex] = temp;
+            let temp = item.pricesList[specIndex];
+            item.pricesList[specIndex] = item.pricesList[targetIndex];
+            item.pricesList[targetIndex] = temp;
 
-            item.prices = Object.fromEntries(entries);
             renderAdminMenuUIKeepOpen(catIndex);
         }
 
@@ -957,7 +972,7 @@
                 
                 let jsonStr = document.getElementById('item-modal-prices-json').value.trim();
                 if (jsonStr) {
-                    try { newItemObj.prices = JSON.parse(jsonStr); } 
+                    try { newItemObj.pricesList = JSON.parse(jsonStr); } 
                     catch(e) { alert('JSON 格式錯誤！'); return; }
                 } else {
                     newItemObj.price = parseInt(document.getElementById('item-modal-price').value) || 30;
