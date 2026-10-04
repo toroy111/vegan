@@ -75,7 +75,7 @@
 
         .menu-manage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         
-        /* 🎨 全新升級的前台風格菜單區塊與折疊設計 */
+        /* 🎨 前台風格菜單區塊與折疊設計 */
         .admin-cat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; transition: 0.2s; }
         .admin-cat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
         
@@ -86,12 +86,20 @@
         .admin-cat-title-area { display: flex; align-items: center; gap: 10px; font-size: 16px; color: #1e293b; }
         .admin-cat-actions { display: flex; align-items: center; gap: 10px; }
         
-        .admin-cat-body { padding: 10px 20px; background: white; display: none; }
+        .admin-cat-body { padding: 15px 20px; background: white; display: none; }
         .admin-cat-body.open { display: block; }
 
-        .admin-item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px dashed #f1f5f9; transition: background 0.15s; border-radius: 6px; }
-        .admin-item-row:hover { background-color: #fafbfc; padding-left: 14px; padding-right: 14px; }
-        .admin-item-row:last-child { border-bottom: none; }
+        /* ✨ 模擬前台卡片與規格樣式的後台編輯列 */
+        .admin-item-card-row { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px; transition: 0.2s; }
+        .admin-item-card-row:hover { border-color: var(--accent-color); box-shadow: 0 4px 10px rgba(230,126,34,0.08); background: #fffcf9; }
+        
+        .admin-item-info { flex: 1; }
+        .admin-item-name { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .admin-specs-preview { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .admin-spec-pill { background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+        .admin-spec-pill.highlight { background: #fff7ed; border-color: #fdba74; color: #c2410c; font-weight: bold; }
+
+        .admin-item-buttons { display: flex; gap: 8px; align-items: center; }
 
         .btn-primary-custom { background-color: #3b82f6; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary-custom:hover { background-color: #2563eb; box-shadow: 0 2px 8px rgba(59,130,246,0.3); }
@@ -99,10 +107,10 @@
         .btn-success-custom { background-color: #10b981; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-success-custom:hover { background-color: #059669; box-shadow: 0 2px 8px rgba(16,185,129,0.3); }
 
-        .btn-danger-custom { background-color: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-danger-custom { background-color: #ef4444; color: white; border: none; padding: 7px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
         .btn-danger-custom:hover { background-color: #dc2626; }
 
-        .btn-warning-custom { background-color: #f59e0b; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; margin-right: 6px; }
+        .btn-warning-custom { background-color: #f59e0b; color: white; border: none; padding: 7px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
         .btn-warning-custom:hover { background-color: #d97706; }
 
         /* 🚀 右下方至頂火箭圈圈按鈕 */
@@ -186,7 +194,7 @@
     <div id="main-admin-content">
         <header>
             <div>
-                <h1 style="font-size: 22px;">🍳 珍愛家素食早午餐 - 後台管理與接單系統 🔔</h1>
+                <h1 style="font-size: 22px;">🍳 珍愛家蔬食早午餐 - 後台管理與接單系統 🔔</h1>
                 <p style="font-size: 12px; opacity: 0.85; margin-top: 4px;">系統已成功連線 Firebase：新訂單即時通知、支援後台動態修改前台菜單與價格</p>
             </div>
             <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
@@ -712,7 +720,7 @@
             });
         }
 
-        // 🌟 菜單與類別管理邏輯（含摺疊與前台質感UI）
+        // 🌟 菜單與類別管理邏輯（結合前台卡片與規格樣式、摺疊功能）
         function loadAdminMenuData() {
             database.ref('menuData').once('value').then(snapshot => {
                 let menu = snapshot.val();
@@ -735,11 +743,20 @@
                 let itemsHtml = '';
                 if (cat.items && cat.items.length > 0) {
                     cat.items.forEach((item, itemIndex) => {
-                        let priceDisplay = item.price !== undefined ? `$${item.price}` : Object.entries(item.prices).map(([k, v]) => `${k}: $${v}`).join(' / ');
+                        let specsHtml = '';
+                        if (item.price !== undefined) {
+                            specsHtml = `<span class="admin-spec-pill highlight">固定價格: $${item.price}</span>`;
+                        } else if (item.prices) {
+                            specsHtml = Object.entries(item.prices).map(([k, v]) => `<span class="admin-spec-pill">${k}: <b style="color:#e11d48;">$${v}</b></span>`).join('');
+                        }
+
                         itemsHtml += `
-                            <div class="admin-item-row">
-                                <div><b style="color:#1e293b; font-size:15px;">${item.name}</b> <span style="color:#e11d48; font-size:13px; margin-left:12px; font-weight:600;">${priceDisplay}</span></div>
-                                <div>
+                            <div class="admin-item-card-row">
+                                <div class="admin-item-info">
+                                    <div class="admin-item-name"><i class="fa-solid fa-utensils" style="font-size:13px; color:#e67e22;"></i> ${item.name}</div>
+                                    <div class="admin-specs-preview">${specsHtml}</div>
+                                </div>
+                                <div class="admin-item-buttons">
                                     <button class="btn-warning-custom" onclick="openEditItemModal(${catIndex}, ${itemIndex})"><i class="fa-solid fa-pen"></i> 編輯</button>
                                     <button class="btn-danger-custom" onclick="deleteMenuItem(${catIndex}, ${itemIndex})"><i class="fa-solid fa-trash"></i> 刪除</button>
                                 </div>
