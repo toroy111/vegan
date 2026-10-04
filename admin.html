@@ -86,7 +86,6 @@
         .admin-cat-actions { display: flex; align-items: center; gap: 10px; }
         
         .admin-cat-body { padding: 15px 20px; background: white; display: none; }
-        .admin-cat-body.open { display: block; }
 
         .admin-item-card-row { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px; transition: 0.2s; }
         .admin-item-card-row:hover { border-color: var(--accent-color); box-shadow: 0 4px 10px rgba(230,126,34,0.08); background: #fffcf9; }
@@ -714,7 +713,7 @@
                     menu = defaultMenuData;
                     database.ref('menu').set(defaultMenuData);
                 }
-                currentAdminMenuCache = JSON.parse(JSON.stringify(menu)); // 備份至本地暫存
+                currentAdminMenuCache = JSON.parse(JSON.stringify(menu));
                 renderAdminMenuUI(currentAdminMenuCache);
             });
         }
@@ -741,7 +740,6 @@
                         } else if (item.prices) {
                             const specEntries = Object.entries(item.prices);
                             specsHtml = specEntries.map(([k, v], sIndex) => {
-                                // 🌟 加上 event.stopPropagation() 防止點擊時觸發父層收合或跳開
                                 let moveLeftBtn = sIndex > 0 ? `<button class="btn-spec-move" onclick="event.stopPropagation(); moveItemSpecLocally(${catIndex}, ${itemIndex}, ${sIndex}, -1)" title="向左移動">◀</button>` : '';
                                 let moveRightBtn = sIndex < specEntries.length - 1 ? `<button class="btn-spec-move" onclick="event.stopPropagation(); moveItemSpecLocally(${catIndex}, ${itemIndex}, ${sIndex}, 1)" title="向右移動">▶</button>` : '';
                                 
@@ -791,7 +789,8 @@
                                 <button class="btn-danger-custom" style="padding:5px 10px; font-size:11px;" onclick="deleteCategory(${catIndex})"><i class="fa-solid fa-trash-can"></i> 刪除分類</button>
                             </div>
                         </div>
-                        <div class="admin-cat-body open" id="cat-body-${catIndex}" style="display: block;">
+                        <!-- 🌟 預設保持 display: none，進入頁面時全部收合，不會自動展開 -->
+                        <div class="admin-cat-body" id="cat-body-${catIndex}" style="display: none;">
                             ${itemsHtml}
                             <div style="text-align: right; margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
                                 <button class="btn-success-custom" onclick="saveCategoryChanges(${catIndex})">
@@ -837,7 +836,7 @@
             });
         }
 
-        // 🌟 本地規格左右移動：只在畫面暫存中調整並重新渲染，絕不直接重洗畫面或跳開
+        // 🌟 本地規格左右移動：保持當前分類與捲動位置，絕不自動收合
         function moveItemSpecLocally(catIndex, itemIndex, specIndex, direction) {
             collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
             let item = currentAdminMenuCache[catIndex].items[itemIndex];
@@ -852,7 +851,9 @@
             entries[targetIndex] = temp;
 
             item.prices = Object.fromEntries(entries);
-            renderAdminMenuUI(currentAdminMenuCache);
+            
+            // 重新渲染並維持當前分類展開狀態
+            renderAdminMenuUIKeepOpen(catIndex);
         }
 
         // 🌟 本地品項上下移動
@@ -866,7 +867,7 @@
             targetItems[itemIndex] = targetItems[targetIndex];
             targetItems[targetIndex] = temp;
 
-            renderAdminMenuUI(currentAdminMenuCache);
+            renderAdminMenuUIKeepOpen(catIndex);
         }
 
         // 🌟 本地刪除品項
@@ -874,7 +875,20 @@
             if (!confirm('確定要刪除這個品項嗎？')) return;
             collectCategoryDataFromDOM(catIndex, currentAdminMenuCache);
             currentAdminMenuCache[catIndex].items.splice(itemIndex, 1);
+            renderAdminMenuUIKeepOpen(catIndex);
+        }
+
+        // 輔助函數：重新渲染畫面但精準保留目前正在編輯的那一格展開狀態
+        function renderAdminMenuUIKeepOpen(catIndex) {
             renderAdminMenuUI(currentAdminMenuCache);
+            const body = document.getElementById(`cat-body-${catIndex}`);
+            const card = document.getElementById(`cat-card-${catIndex}`);
+            if (body && card) {
+                body.style.display = 'block';
+                card.querySelector('.admin-cat-header').classList.add('active');
+                const icon = card.querySelector(`.toggle-icon-${catIndex}`);
+                if (icon) icon.style.transform = 'rotate(90deg)';
+            }
         }
 
         // 點擊「儲存此分類變更」才真正寫入 Firebase
